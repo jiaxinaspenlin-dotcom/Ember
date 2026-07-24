@@ -25,6 +25,18 @@ def test_presence_buckets_by_recency():
     assert community.presence_for(None, now=now) == "offline"
 
 
+def test_signing_in_marks_you_online_immediately(db, make_user):
+    # Presence must not wait for the 5-minute refresh -- login lights it up.
+    from app.auth import sessions
+
+    person = make_user("Fresh Login")
+    assert person.user.last_active_at is None
+    sessions.create_session(db, person.user)
+    db.commit()
+    assert person.user.last_active_at is not None
+    assert community.count_online(db, cohort=person.cohort) == 1
+
+
 def test_count_online_only_counts_active_members(db, make_user, make_cohort):
     now = utcnow()
     here = make_user("Present Person")

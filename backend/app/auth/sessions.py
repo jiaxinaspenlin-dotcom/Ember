@@ -39,6 +39,9 @@ def create_session(
         ip_address=(ip_address or "")[:64] or None,
     )
     db.add(session)
+    # Presence should light up the instant someone signs in, not only after the
+    # first throttled refresh five minutes later.
+    user.last_active_at = utcnow()
     db.flush()
     return session, raw_token
 
