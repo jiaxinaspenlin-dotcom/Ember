@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import avatar, status_badge %}
+{% set decision = view.decision %}
+{% block title %}{{ decision.title }} · Decision Log{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+  <a href="/decisions" class="text-sm font-medium text-ember-700 hover:text-ember-800">← Decision Log</a>
+
+  <header class="mb-6 mt-3">
+    <h1 class="text-2xl font-semibold tracking-tight">{{ decision.title }}</h1>
+    <div class="mt-2 flex flex-wrap items-center gap-2">
+      {{ status_badge(decision.status.value, decision.status.label) }}
+      {% if decision.related_project %}
+        <span class="badge-neutral">{{ decision.related_project }}</span>
+      {% endif %}
+    </div>
+  </header>
+
+  <section class="card-pad">
+    <div class="flex items-center gap-3">
+      {{ avatar(decision.author, 9) }}
+      <div>
+        <p class="text-sm font-medium">{{ decision.author.display_name }}</p>
+        <p class="text-xs text-charcoal-500">Recorded {{ decision.created_at | absolute_time }}</p>
+      </div>
+    </div>
+
+    <h2 class="mt-5 text-xs font-semibold uppercase tracking-wide text-charcoal-500">Decision</h2>
+    <p class="prose-message mt-1.5 whitespace-pre-line">{{ decision.decision_text }}</p>
+
+    {% if decision.context %}
+      <h2 class="mt-5 text-xs font-semibold uppercase tracking-wide text-charcoal-500">Context</h2>
+      <p class="mt-1.5 whitespace-pre-line text-sm text-charcoal-700">{{ decision.context }}</p>
+    {% endif %}
+
+    {% if decision.source_channel %}
+      <p class="mt-5 text-xs text-charcoal-500">
+        From
+        <a href="/channels/{{ decision.source_channel.slug }}{% if source_message %}#message-{{ source_message.id }}{% endif %}"
+           class="text-ember-700 hover:text-ember-800">#{{ decision.source_channel.name }}</a>
+        {% if source_message %}
+          · <a href="/threads/{{ source_message.id }}" class="text-ember-700">open original message</a>
+        {% endif %}
+      </p>
+    {% endif %}
+  </section>
+
+  {% if superseded_by %}
+    <section class="card-pad mt-4 border-l-4 border-l-charcoal-400">
+      <h2 class="text-sm font-semibold">Superseded</h2>
+      <p class="mt-2 text-sm text-charcoal-700">
+        Replaced by
+        <a href="/decisions/{{ superseded_by.id }}" class="font-medium text-ember-700 hover:text-ember-800">
+          {{ superseded_by.title }}
+        </a>
+        on {{ decision.superseded_at | absolute_time }}.
+      </p>
+    </section>
+  {% endif %}
+
+  {% if decision.status.value == 'reversed' %}
+    <section class="card-pad mt-4 border-l-4 border-l-red-500">
+      <h2 class="text-sm font-semibold">Reversed</h2>
+      <p class="mt-2 text-sm text-charcoal-700">
+        {{ decision.reversal_reason or 'No reason was recorded.' }}
+      </p>
+      <p class="mt-1.5 text-xs text-charcoal-500">{{ decision.reversed_at | absolute_time }}</p>
+    </section>
+  {% endif %}
+
+  {% if view.can_supersede %}
+    <section class="card-pad mt-4" aria-labelledby="supersede-heading">
+      <h2 id="supersede-heading" class="text-sm font-semibold">Supersede this decision</h2>
+      {% if replacement_options %}
+        <form method="post" action="/decisions/{{ decision.id }}/supersede" class="mt-3 space-y-3">
+          <div>
+            <label class="label" for="replacement">Replaced by</label>
+            <select class="input" id="replacement" name="superseded_by_id" required>
+              <option value="">Choose the decision that replaces this one</option>
+              {% for option in replacement_options %}
+                <option value="{{ option.id }}">{{ option.title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn-secondary">Mark as superseded</button>
+        </form>
+      {% else %}
+        <p class="mt-2 text-sm text-charcoal-500">
+          Record the replacement decision first, then link it here.
+        </p>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {% if view.can_reverse %}
+    <section class="card-pad mt-4" aria-labelledby="reverse-heading">
+      <h2 id="reverse-heading" class="text-sm font-semibold">Reverse this decision</h2>
+      <form method="post" action="/decisions/{{ decision.id }}/reverse" class="mt-3 space-y-3">
+        <div>
+          <label class="label" for="reverse-reason">Why is it being reversed?</label>
+          <textarea class="input" id="reverse-reason" name="reason" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn-danger">Reverse decision</button>
+      </form>
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

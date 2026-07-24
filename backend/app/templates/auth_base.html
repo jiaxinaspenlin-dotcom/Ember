@@ -1,0 +1,58 @@
+{# Shell for signed-out pages: sign in, sign up, errors. #}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}{{ APP_NAME }}{% endblock %}</title>
+    <meta name="description" content="{{ APP_TAGLINE }}" />
+    <link rel="stylesheet" href="/static/css/app.css" />
+    <link rel="icon" href="/static/img/ember-mark.svg" type="image/svg+xml" />
+  </head>
+  <body class="h-full bg-sand-100">
+    <div class="flex min-h-full flex-col lg:flex-row">
+      <section class="hidden lg:flex lg:w-1/2 flex-col justify-between bg-charcoal-950 p-12 text-white">
+        <div class="flex items-center gap-3">
+          <img src="/static/img/ember-mark.svg" alt="" class="h-9 w-9" aria-hidden="true" />
+          <span class="text-xl font-semibold tracking-tight">Ember</span>
+        </div>
+        <div class="max-w-md">
+          <h1 class="text-4xl font-semibold leading-tight tracking-tight">
+            Where cohort conversations turn into action.
+          </h1>
+          <p class="mt-5 text-charcoal-200 leading-relaxed">
+            Ember gives builders, students and accelerator cohorts one place to talk,
+            ask for help, record decisions and assign the work that follows.
+          </p>
+          <ul class="mt-8 space-y-3 text-sm text-charcoal-300">
+            <li class="flex gap-3">
+              <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ember-400"></span>
+              Channels, threads and direct messages with unread tracking
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ember-400"></span>
+              A shared Help Queue so nobody stays blocked
+            </li>
+            <li class="flex gap-3">
+              <span class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-ember-400"></span>
+              A searchable Decision Log and tasks with real owners
+            </li>
+          </ul>
+        </div>
+        <p class="text-xs text-charcoal-400">
+          Your workspace starts empty. Everything you see is created by your cohort.
+        </p>
+      </section>
+
+      <section class="flex w-full flex-1 items-center justify-center px-4 py-12 sm:px-8">
+        <div class="w-full max-w-md">
+          <div class="mb-8 flex items-center gap-3 lg:hidden">
+            <img src="/static/img/ember-mark.svg" alt="" class="h-8 w-8" aria-hidden="true" />
+            <span class="text-lg font-semibold tracking-tight">Ember</span>
+          </div>
+          {% block content %}{% endblock %}
+        </div>
+      </section>
+    </div>
+  </body>
+</html>

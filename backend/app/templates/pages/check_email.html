@@ -1,0 +1,26 @@
+{% extends "auth_base.html" %}
+{% block title %}{{ heading or "Check your email" }} · Ember{% endblock %}
+
+{% block content %}
+  <div class="card-pad text-center">
+    <div class="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-ember-100"
+         aria-hidden="true">
+      <svg class="h-6 w-6 text-ember-700" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="m3 7 9 6 9-6" />
+      </svg>
+    </div>
+    <h1 class="text-2xl font-semibold tracking-tight">{{ heading or "Check your email" }}</h1>
+    <p class="mt-2 text-sm text-charcoal-600">
+      {{ message or "If that address can be registered, we have sent a link to it. Follow the link to continue." }}
+    </p>
+    {% if email %}
+      <p class="mt-1 text-sm font-medium text-charcoal-900">{{ email }}</p>
+    {% endif %}
+    <p class="mt-6 text-xs text-charcoal-500">
+      The link expires soon and can be used once. Didn't get it? Check your spam folder.
+    </p>
+    <a href="/signin" class="btn-secondary mt-6 w-full">Back to sign in</a>
+  </div>
+{% endblock %}

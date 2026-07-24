@@ -1,0 +1,14 @@
+{
+  "name": "ember-styles",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tailwind build for Ember. The compiled stylesheet is committed, so production needs no Node toolchain.",
+  "scripts": {
+    "css": "tailwindcss -i frontend-src/app.css -o backend/app/static/css/app.css --minify",
+    "css:watch": "tailwindcss -i frontend-src/app.css -o backend/app/static/css/app.css --watch"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
+  }
+}

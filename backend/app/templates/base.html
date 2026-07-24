@@ -1,0 +1,41 @@
+{# Application shell for signed-in pages. #}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}{{ APP_NAME }}{% endblock %}</title>
+    <meta name="description" content="{{ APP_TAGLINE }}" />
+    <link rel="stylesheet" href="/static/css/app.css" />
+    <link rel="icon" href="/static/img/ember-mark.svg" type="image/svg+xml" />
+    <script src="/static/js/htmx.min.js" defer></script>
+    <script src="/static/js/alpine.min.js" defer></script>
+    <script src="/static/js/ember.js" defer></script>
+  </head>
+  <body class="h-full">
+    <a class="skip-link" href="#main">Skip to main content</a>
+
+    <div class="min-h-full lg:flex">
+      {% include "components/sidebar.html" %}
+
+      <div class="flex min-h-screen w-full flex-col lg:pl-72">
+        {% include "components/topbar.html" %}
+
+        <main id="main" class="flex-1 focus:outline-none" tabindex="-1">
+          {% if error_message %}
+            <div class="mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6">
+              <div class="error-state" role="alert">
+                <p class="font-semibold">Something needs your attention</p>
+                <p>{{ error_message }}</p>
+              </div>
+            </div>
+          {% endif %}
+          {% block content %}{% endblock %}
+        </main>
+      </div>
+    </div>
+
+    <div id="ember-toast" class="pointer-events-none fixed bottom-6 right-6 z-50 flex flex-col gap-2"
+         aria-live="polite" aria-atomic="true"></div>
+  </body>
+</html>

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import avatar, page_header %}
+{% block title %}Your profile · Ember{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
+  {{ page_header('Your profile', 'This is what the rest of your cohort sees.') }}
+
+  {% if request.query_params.get('saved') %}
+    <div class="mb-5 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+         role="status">
+      Profile saved.
+    </div>
+  {% endif %}
+
+  <section class="card-pad">
+    <div class="flex items-center gap-4">
+      {{ avatar(current_user, 14) }}
+      <div>
+        <p class="text-sm font-semibold">{{ current_user.display_name }}</p>
+        <p class="text-xs text-charcoal-500">
+          {{ 'Administrator' if is_admin else 'Member' }}
+          {% if current_user.email %} · {{ current_user.email }}{% endif %}
+        </p>
+        <p class="mt-0.5 text-xs text-charcoal-400">
+          Your email address is never shown to other members.
+        </p>
+      </div>
+    </div>
+
+    <form method="post" action="/profile" class="mt-6 space-y-5">
+      <div>
+        <label class="label" for="display_name">Display name</label>
+        <input class="input" id="display_name" name="display_name" required minlength="2"
+               maxlength="120" value="{{ current_user.display_name }}" />
+        <p class="hint">Others mention you with @{{ current_user.display_name | replace(' ', '-') | lower }}</p>
+      </div>
+
+      <div>
+        <label class="label" for="avatar_url">Avatar URL <span class="text-charcoal-400">(optional)</span></label>
+        <input class="input" id="avatar_url" name="avatar_url" type="url" maxlength="500"
+               value="{{ current_user.avatar_url or '' }}" placeholder="https://…" />
+      </div>
+
+      <div>
+        <label class="label" for="bio">Short bio</label>
+        <textarea class="input" id="bio" name="bio" rows="3" maxlength="500">{{ profile.bio or '' }}</textarea>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="label" for="current_project">Current project</label>
+          <input class="input" id="current_project" name="current_project" maxlength="160"
+                 value="{{ profile.current_project or '' }}" />
+        </div>
+        <div>
+          <label class="label" for="project_area">Project area</label>
+          <input class="input" id="project_area" name="project_area" maxlength="80"
+                 value="{{ profile.project_area or '' }}" placeholder="e.g. Developer tools" />
+        </div>
+      </div>
+
+      <div>
+        <label class="label" for="skills">Skills</label>
+        <input class="input" id="skills" name="skills" value="{{ profile.skill_names | join(', ') }}"
+               placeholder="Python, React, Design" aria-describedby="skills-hint" />
+        <p class="hint" id="skills-hint">Comma-separated, up to 12.</p>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="label" for="working_status">Working status</label>
+          <select class="input" id="working_status" name="working_status">
+            {% for item in WORKING_STATUSES %}
+              <option value="{{ item.value }}"
+                      {% if profile.working_status.value == item.value %}selected{% endif %}>
+                {{ item.label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="flex items-end">
+          <label class="flex items-center gap-2 pb-2.5 text-sm">
+            <input type="checkbox" name="available_to_help" value="true"
+                   {% if profile.available_to_help %}checked{% endif %}
+                   class="rounded border-charcoal-300" />
+            I am available to help others
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary">Save profile</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

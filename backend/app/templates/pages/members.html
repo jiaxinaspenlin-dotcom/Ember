@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import avatar, empty_state, page_header, presence_dot, working_status_dot %}
+{% block title %}Members · Ember{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
+  {{ page_header('Members', 'Who is in the cohort, what they are building, and who is free to help.') }}
+
+  <form method="get" action="/members" class="card-pad grid gap-4 sm:grid-cols-4" role="search">
+    <div class="sm:col-span-2">
+      <label class="label" for="member-q">Search</label>
+      <input class="input" id="member-q" name="q" type="search" value="{{ query }}"
+             placeholder="Name, project or bio" />
+    </div>
+    <div>
+      <label class="label" for="member-skill">Skill</label>
+      <select class="input" id="member-skill" name="skill">
+        <option value="">Any skill</option>
+        {% for skill in all_skills %}
+          <option value="{{ skill.slug }}" {% if selected_skill == skill.slug %}selected{% endif %}>
+            {{ skill.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="label" for="member-status">Working status</label>
+      <select class="input" id="member-status" name="working_status">
+        <option value="">Any status</option>
+        {% for item in WORKING_STATUSES %}
+          <option value="{{ item.value }}" {% if selected_status == item.value %}selected{% endif %}>
+            {{ item.label }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="label" for="member-area">Project area</label>
+      <select class="input" id="member-area" name="project_area">
+        <option value="">Any area</option>
+        {% for area in all_areas %}
+          <option value="{{ area }}" {% if selected_area == area %}selected{% endif %}>{{ area }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="flex items-center gap-4 sm:col-span-2">
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="available_only" value="true"
+               {% if available_only %}checked{% endif %} class="rounded border-charcoal-300" />
+        Available to help only
+      </label>
+    </div>
+    <div class="flex items-end gap-2">
+      <button type="submit" class="btn-primary btn-sm">Apply</button>
+      <a href="/members" class="btn-ghost btn-sm">Reset</a>
+    </div>
+  </form>
+
+  <div class="mt-6">
+    {% if members %}
+      <ul role="list" class="grid gap-3 sm:grid-cols-2">
+        {% for membership in members %}
+          {% set member = membership.user %}
+          {% set profile = membership %}
+          <li class="card p-4">
+            <div class="flex items-start gap-3">
+              <span class="relative shrink-0">
+                {{ avatar(member, 11) }}
+                <span class="absolute -bottom-0.5 -right-0.5">{{ presence_dot(member, ring=True) }}</span>
+              </span>
+              <div class="min-w-0 flex-1">
+                <a href="/members/{{ member.id }}"
+                   class="text-sm font-semibold text-charcoal-950 hover:text-ember-700">
+                  {{ member.display_name }}
+                </a>
+                <p class="mt-0.5 flex items-center gap-1.5 text-xs text-charcoal-500">
+                  {{ working_status_dot(profile.working_status) }}
+                  {{ profile.working_status.label }}
+                </p>
+                {% if profile.current_project %}
+                  <p class="mt-1.5 truncate text-sm text-charcoal-700">{{ profile.current_project }}</p>
+                {% endif %}
+                {% if profile.project_area %}
+                  <p class="text-xs text-charcoal-500">{{ profile.project_area }}</p>
+                {% endif %}
+                {% if profile.skill_names %}
+                  <ul role="list" class="mt-2 flex flex-wrap gap-1">
+                    {% for skill in profile.skill_names[:5] %}
+                      <li class="badge-neutral">{{ skill }}</li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+              </div>
+            </div>
+            <div class="mt-3 flex items-center justify-between">
+              {% if profile.available_to_help %}
+                <span class="badge-green">Available to help</span>
+              {% else %}
+                <span></span>
+              {% endif %}
+              <form method="post" action="/dm/start">
+                <input type="hidden" name="user_id" value="{{ member.id }}" />
+                <button type="submit" class="btn-secondary btn-sm">Message</button>
+              </form>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+
+      {% if total > 50 %}
+        <nav class="mt-6 flex items-center justify-between border-t border-charcoal-200 pt-4"
+             aria-label="Pagination">
+          <p class="text-sm text-charcoal-500">Showing {{ offset + 1 }}–{{ offset + members | length }} of {{ total }}</p>
+          <div class="flex gap-2">
+            {% if offset > 0 %}
+              <a class="btn-secondary btn-sm" href="/members?offset={{ [offset - 50, 0] | max }}">Previous</a>
+            {% endif %}
+            {% if offset + 50 < total %}
+              <a class="btn-secondary btn-sm" href="/members?offset={{ offset + 50 }}">Next</a>
+            {% endif %}
+          </div>
+        </nav>
+      {% endif %}
+    {% elif query or selected_skill or selected_status or available_only or selected_area %}
+      {{ empty_state('No members match those filters.', 'Try widening your search.') }}
+    {% else %}
+      {{ empty_state('No other members have joined yet.',
+          'When your cohort signs up, everyone appears here.') }}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

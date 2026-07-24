@@ -1,0 +1,195 @@
+{% from "components/macros.html" import avatar, presence_dot %}
+{# Sidebar. Channels, unread counts and admin actions all come from Python. #}
+<div x-data="{ open: false }" class="lg:contents">
+  <button type="button" class="btn-ghost fixed left-3 top-3 z-40 lg:hidden"
+          @click="open = true" aria-label="Open navigation" aria-controls="ember-sidebar">
+    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+      <path d="M3 5.5h14M3 10h14M3 14.5h14" stroke="currentColor" stroke-width="1.6"
+            stroke-linecap="round" fill="none"/>
+    </svg>
+  </button>
+
+  <div x-show="open" x-cloak class="fixed inset-0 z-40 bg-charcoal-950/40 lg:hidden"
+       @click="open = false" aria-hidden="true"></div>
+
+  <nav id="ember-sidebar" aria-label="Main navigation"
+       class="fixed inset-y-0 left-0 z-40 flex w-72 flex-col border-r border-charcoal-200 bg-sand-50
+              transition-transform lg:translate-x-0"
+       :class="open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
+
+    <div class="flex items-center justify-between px-5 py-5">
+      <a href="/" class="flex items-center gap-2.5">
+        <img src="/static/img/ember-mark.svg" alt="" class="h-7 w-7" aria-hidden="true" />
+        <span class="text-lg font-semibold tracking-tight text-charcoal-950">Ember</span>
+      </a>
+      <button type="button" class="btn-ghost btn-sm lg:hidden" @click="open = false"
+              aria-label="Close navigation">✕</button>
+    </div>
+
+    {# Workspace (cohort) switcher #}
+    {% if cohort %}
+      <div class="px-3 pb-3" x-data="{ pick: false }">
+        <button type="button" @click="pick = !pick" :aria-expanded="pick"
+                class="flex w-full items-center justify-between gap-2 rounded-lg border border-charcoal-200
+                       bg-white px-3 py-2 text-left hover:border-charcoal-300">
+          <span class="min-w-0">
+            <span class="block truncate text-sm font-semibold text-charcoal-900">{{ cohort.name }}</span>
+            <span class="block text-xs text-charcoal-500">
+              {{ 'Admin' if is_admin else 'Member' }}{% if nav_cohorts | length > 1 %} · switch{% endif %}
+            </span>
+          </span>
+          <span class="text-charcoal-400" aria-hidden="true">▾</span>
+        </button>
+        <div x-show="pick" x-cloak @click.outside="pick = false"
+             class="mt-1 space-y-0.5 rounded-lg border border-charcoal-200 bg-white p-1 shadow-lift">
+          {% for item in nav_cohorts %}
+            {% if item.cohort.id == cohort.id %}
+              <span class="flex items-center justify-between rounded-md px-3 py-1.5 text-sm font-medium text-ember-700">
+                {{ item.cohort.name }} <span aria-hidden="true">✓</span>
+              </span>
+            {% else %}
+              <form method="post" action="/cohorts/{{ item.cohort.slug }}/switch">
+                <button type="submit"
+                        class="flex w-full items-center justify-between rounded-md px-3 py-1.5 text-left text-sm
+                               text-charcoal-700 hover:bg-sand-100">
+                  <span class="truncate">{{ item.cohort.name }}</span>
+                  {% if item.membership.is_admin %}<span class="badge-neutral">Admin</span>{% endif %}
+                </button>
+              </form>
+            {% endif %}
+          {% endfor %}
+          <a href="/cohorts"
+             class="block rounded-md px-3 py-1.5 text-sm text-ember-700 hover:bg-sand-100">
+            + Create or join a cohort
+          </a>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="flex-1 overflow-y-auto scrollbar-slim px-3 pb-6">
+      <ul class="space-y-0.5" role="list">
+        <li><a href="/" class="nav-link {% if active_nav == 'home' %}nav-link-active{% endif %}"
+               {% if active_nav == 'home' %}aria-current="page"{% endif %}>Home</a></li>
+        <li><a href="/channels" class="nav-link {% if active_nav == 'channels' %}nav-link-active{% endif %}"
+               {% if active_nav == 'channels' %}aria-current="page"{% endif %}>Channels</a></li>
+        <li><a href="/dm" class="nav-link {% if active_nav == 'dm' %}nav-link-active{% endif %}"
+               {% if active_nav == 'dm' %}aria-current="page"{% endif %}>Direct Messages</a></li>
+        <li><a href="/help" class="nav-link {% if active_nav == 'help' %}nav-link-active{% endif %}"
+               {% if active_nav == 'help' %}aria-current="page"{% endif %}>Help Queue</a></li>
+        <li><a href="/decisions" class="nav-link {% if active_nav == 'decisions' %}nav-link-active{% endif %}"
+               {% if active_nav == 'decisions' %}aria-current="page"{% endif %}>Decisions</a></li>
+        <li><a href="/tasks" class="nav-link {% if active_nav == 'tasks' %}nav-link-active{% endif %}"
+               {% if active_nav == 'tasks' %}aria-current="page"{% endif %}>Tasks</a></li>
+        <li><a href="/check-in" class="nav-link {% if active_nav == 'checkin' %}nav-link-active{% endif %}"
+               {% if active_nav == 'checkin' %}aria-current="page"{% endif %}>Check-in</a></li>
+        <li><a href="/kudos" class="nav-link {% if active_nav == 'kudos' %}nav-link-active{% endif %}"
+               {% if active_nav == 'kudos' %}aria-current="page"{% endif %}>Kudos</a></li>
+        <li><a href="/search" class="nav-link {% if active_nav == 'search' %}nav-link-active{% endif %}"
+               {% if active_nav == 'search' %}aria-current="page"{% endif %}>Search</a></li>
+        <li><a href="/members" class="nav-link {% if active_nav == 'members' %}nav-link-active{% endif %}"
+               {% if active_nav == 'members' %}aria-current="page"{% endif %}>Members</a></li>
+        <li>
+          <a href="/notifications" class="nav-link {% if active_nav == 'notifications' %}nav-link-active{% endif %}"
+             {% if active_nav == 'notifications' %}aria-current="page"{% endif %}>
+            <span>Notifications</span>
+            <span id="nav-notification-badge" class="ml-auto"
+                  hx-get="/hx/notifications/badge"
+                  hx-trigger="every {{ POLLING_INTERVAL_MS * 3 }}ms"
+                  hx-swap="innerHTML">
+              {% if nav_unread_notifications %}
+                <span class="badge-ember tabular-nums">{{ nav_unread_notifications }}</span>
+              {% endif %}
+            </span>
+          </a>
+        </li>
+        <li><a href="/announcements" class="nav-link {% if active_nav == 'announcements' %}nav-link-active{% endif %}"
+               {% if active_nav == 'announcements' %}aria-current="page"{% endif %}>Announcements</a></li>
+        {% if is_admin %}
+          <li><a href="/admin" class="nav-link {% if active_nav == 'admin' %}nav-link-active{% endif %}"
+                 {% if active_nav == 'admin' %}aria-current="page"{% endif %}>Admin</a></li>
+        {% endif %}
+      </ul>
+
+      <div class="mt-7">
+        <div class="flex items-center justify-between px-3">
+          <h2 class="text-xs font-semibold uppercase tracking-wide text-charcoal-500">Channels</h2>
+          <a href="/channels" class="text-xs font-medium text-ember-700 hover:text-ember-800">New</a>
+        </div>
+        <ul class="mt-2 space-y-0.5" role="list">
+          {% for item in nav_channels if not item.channel.is_archived %}
+            <li>
+              <a href="/channels/{{ item.channel.slug }}"
+                 class="nav-link justify-between py-1.5 text-[0.8125rem]">
+                <span class="truncate">
+                  <span class="text-charcoal-400" aria-hidden="true">#</span>
+                  {{ item.channel.name }}
+                </span>
+                {% if item.unread_count %}
+                  <span class="badge-ember tabular-nums shrink-0">{{ item.unread_count }}</span>
+                  <span class="sr-only">{{ item.unread_count }} unread messages</span>
+                {% endif %}
+              </a>
+            </li>
+          {% else %}
+            <li class="px-3 py-2 text-xs text-charcoal-500">
+              No channels yet.
+              <a href="/channels" class="text-ember-700 underline">Create the first channel.</a>
+            </li>
+          {% endfor %}
+        </ul>
+        {% if nav_archived_count %}
+          <a href="/channels?archived=true"
+             class="mt-1 block px-3 py-1.5 text-xs text-charcoal-500 hover:text-charcoal-800">
+            Archived channels ({{ nav_archived_count }})
+          </a>
+        {% endif %}
+      </div>
+
+      <div class="mt-7">
+        <h2 class="px-3 text-xs font-semibold uppercase tracking-wide text-charcoal-500">
+          Direct messages
+        </h2>
+        <ul class="mt-2 space-y-0.5" role="list">
+          {% for item in nav_conversations %}
+            <li>
+              <a href="/dm/{{ item.conversation.id }}" class="nav-link justify-between py-1.5 text-[0.8125rem]">
+                <span class="flex min-w-0 items-center gap-2">
+                  <span class="relative shrink-0">
+                    {{ avatar(item.other_member, 6) }}
+                    <span class="absolute -bottom-0.5 -right-0.5">{{ presence_dot(item.other_member) }}</span>
+                  </span>
+                  <span class="truncate">{{ item.other_member.display_name }}</span>
+                </span>
+                {% if item.unread_count %}
+                  <span class="badge-ember tabular-nums shrink-0">{{ item.unread_count }}</span>
+                  <span class="sr-only">{{ item.unread_count }} unread messages</span>
+                {% endif %}
+              </a>
+            </li>
+          {% else %}
+            <li class="px-3 py-2 text-xs text-charcoal-500">
+              No conversations yet. <a href="/members" class="text-ember-700 underline">Message a cohort member.</a>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="border-t border-charcoal-200 p-3">
+      <a href="/profile" class="nav-link">
+        {{ avatar(current_user, 8) }}
+        <span class="min-w-0 flex-1">
+          <span class="block truncate text-sm font-medium text-charcoal-900">
+            {{ current_user.display_name }}
+          </span>
+          <span class="block text-xs text-charcoal-500">
+            {{ 'Administrator' if is_admin else 'Member' }}
+          </span>
+        </span>
+      </a>
+      <form method="post" action="/signout" class="mt-1">
+        <button type="submit" class="nav-link w-full text-left">Sign out</button>
+      </form>
+    </div>
+  </nav>
+</div>

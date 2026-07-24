@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Set up your profile · Ember{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-2xl px-4 py-10 sm:px-6">
+  <header class="mb-6">
+    <p class="text-xs font-semibold uppercase tracking-wide text-ember-700">One quick step</p>
+    <h1 class="mt-2 text-2xl font-semibold tracking-tight">Set up your profile</h1>
+    <p class="mt-1.5 text-sm text-charcoal-500">
+      Your cohort finds each other by what you are building and what you can help with.
+    </p>
+  </header>
+
+  <section class="card-pad">
+    <form method="post" action="/profile/complete" class="space-y-5">
+      <div>
+        <label class="label" for="display_name">Display name</label>
+        <input class="input" id="display_name" name="display_name" required minlength="2"
+               maxlength="120" value="{{ current_user.display_name }}" />
+      </div>
+
+      <div>
+        <label class="label" for="bio">Short bio</label>
+        <textarea class="input" id="bio" name="bio" rows="3" maxlength="500"
+                  placeholder="One or two lines about you.">{{ profile.bio or '' }}</textarea>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="label" for="current_project">What are you building?</label>
+          <input class="input" id="current_project" name="current_project" maxlength="160"
+                 value="{{ profile.current_project or '' }}" />
+        </div>
+        <div>
+          <label class="label" for="project_area">Project area</label>
+          <input class="input" id="project_area" name="project_area" maxlength="80"
+                 value="{{ profile.project_area or '' }}" placeholder="e.g. Fintech" />
+        </div>
+      </div>
+
+      <div>
+        <label class="label" for="skills">Skills you can help with</label>
+        <input class="input" id="skills" name="skills" value="{{ profile.skill_names | join(', ') }}"
+               placeholder="Python, Design, Deployment" aria-describedby="skills-hint" />
+        <p class="hint" id="skills-hint">Comma-separated, up to 12.</p>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="label" for="working_status">Working status</label>
+          <select class="input" id="working_status" name="working_status">
+            {% for item in WORKING_STATUSES %}
+              <option value="{{ item.value }}"
+                      {% if profile.working_status.value == item.value %}selected{% endif %}>
+                {{ item.label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="flex items-end">
+          <label class="flex items-center gap-2 pb-2.5 text-sm">
+            <input type="checkbox" name="available_to_help" value="true"
+                   {% if profile.available_to_help %}checked{% endif %}
+                   class="rounded border-charcoal-300" />
+            I am available to help others
+          </label>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button type="submit" class="btn-primary">Save and continue</button>
+      </div>
+    </form>
+
+    <form method="post" action="/profile/complete/skip" class="mt-2">
+      <button type="submit" class="btn-ghost">Skip for now</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

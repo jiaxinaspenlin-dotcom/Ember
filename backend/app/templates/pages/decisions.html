@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import empty_state, page_header, status_badge %}
+{% block title %}Decision Log · Ember{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
+  {{ page_header('Decision Log', 'What was decided, when, and what replaced it.') }}
+
+  <details class="card-pad">
+    <summary class="cursor-pointer text-sm font-semibold">Record a decision</summary>
+    <form method="post" action="/decisions" class="mt-4 space-y-4">
+      <div>
+        <label class="label" for="new-decision-title">Title</label>
+        <input class="input" id="new-decision-title" name="title" required minlength="4" maxlength="160"
+               placeholder="e.g. Ship the MVP without offline support" />
+      </div>
+      <div>
+        <label class="label" for="new-decision-text">What was decided?</label>
+        <textarea class="input" id="new-decision-text" name="decision_text" rows="3" required></textarea>
+      </div>
+      <div>
+        <label class="label" for="new-decision-context">Context <span class="text-charcoal-400">(optional)</span></label>
+        <textarea class="input" id="new-decision-context" name="context" rows="3"
+                  placeholder="Alternatives considered, constraints, who was involved."></textarea>
+      </div>
+      <div>
+        <label class="label" for="new-decision-project">Related project <span class="text-charcoal-400">(optional)</span></label>
+        <input class="input" id="new-decision-project" name="related_project" maxlength="160" />
+      </div>
+      <button type="submit" class="btn-primary">Record decision</button>
+    </form>
+  </details>
+
+  <form method="get" action="/decisions" class="card-pad mt-6 grid gap-4 sm:grid-cols-4" role="search">
+    <div class="sm:col-span-2">
+      <label class="label" for="decision-q">Search</label>
+      <input class="input" id="decision-q" name="q" type="search" value="{{ query }}"
+             placeholder="Search decisions" />
+    </div>
+    <div>
+      <label class="label" for="decision-status">Status</label>
+      <select class="input" id="decision-status" name="status">
+        <option value="">Any status</option>
+        {% for item in DECISION_STATUSES %}
+          <option value="{{ item.value }}"
+                  {% if filters.status and filters.status.value == item.value %}selected{% endif %}>
+            {{ item.label }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="label" for="decision-channel">Channel</label>
+      <select class="input" id="decision-channel" name="channel_id">
+        <option value="">Any channel</option>
+        {% for channel in all_channels %}
+          <option value="{{ channel.id }}"
+                  {% if filters.channel_id and filters.channel_id|string == channel.id|string %}selected{% endif %}>
+            #{{ channel.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="label" for="decision-author">Author</label>
+      <select class="input" id="decision-author" name="author_id">
+        <option value="">Anyone</option>
+        {% for member in all_members %}
+          <option value="{{ member.id }}"
+                  {% if filters.author_id and filters.author_id|string == member.id|string %}selected{% endif %}>
+            {{ member.display_name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="label" for="decision-project">Project</label>
+      <select class="input" id="decision-project" name="related_project">
+        <option value="">Any project</option>
+        {% for project in projects %}
+          <option value="{{ project }}" {% if filters.related_project == project %}selected{% endif %}>
+            {{ project }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="flex items-end gap-2 sm:col-span-2">
+      <button type="submit" class="btn-primary btn-sm">Apply filters</button>
+      <a href="/decisions" class="btn-ghost btn-sm">Reset</a>
+    </div>
+  </form>
+
+  <div class="mt-6">
+    {% if views %}
+      <ul role="list" class="space-y-3">
+        {% for item in views %}
+          {% set decision = item.decision %}
+          <li class="card p-4">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="min-w-0">
+                <a href="/decisions/{{ decision.id }}"
+                   class="text-sm font-semibold text-charcoal-950 hover:text-ember-700">
+                  {{ decision.title }}
+                </a>
+                <p class="mt-1 line-clamp-2 text-sm text-charcoal-600">{{ decision.decision_text }}</p>
+                <div class="mt-2 flex flex-wrap items-center gap-2">
+                  {{ status_badge(decision.status.value, decision.status.label) }}
+                  {% if decision.related_project %}
+                    <span class="badge-neutral">{{ decision.related_project }}</span>
+                  {% endif %}
+                  {% if decision.source_channel %}
+                    <a href="/channels/{{ decision.source_channel.slug }}"
+                       class="text-xs text-charcoal-500 hover:text-ember-700">#{{ decision.source_channel.name }}</a>
+                  {% endif %}
+                </div>
+                <p class="mt-2 text-xs text-charcoal-500">
+                  {{ decision.author.display_name }} · {{ decision.created_at | relative_time }}
+                </p>
+              </div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+
+      {% if total > page_size %}
+        <nav class="mt-6 flex items-center justify-between border-t border-charcoal-200 pt-4"
+             aria-label="Pagination">
+          <p class="text-sm text-charcoal-500">Showing {{ offset + 1 }}–{{ offset + views | length }} of {{ total }}</p>
+          <div class="flex gap-2">
+            {% if offset > 0 %}
+              <a class="btn-secondary btn-sm" href="/decisions?offset={{ [offset - page_size, 0] | max }}">Previous</a>
+            {% endif %}
+            {% if offset + page_size < total %}
+              <a class="btn-secondary btn-sm" href="/decisions?offset={{ offset + page_size }}">Next</a>
+            {% endif %}
+          </div>
+        </nav>
+      {% endif %}
+    {% else %}
+      {{ empty_state('No decisions have been recorded.',
+          'Turn an important message into a decision, or record one directly above.') }}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "auth_base.html" %}
+{% block title %}Create your account · Ember{% endblock %}
+
+{% block content %}
+  <div class="card-pad">
+    <h1 class="text-2xl font-semibold tracking-tight">Create your account</h1>
+    <p class="mt-1.5 text-sm text-charcoal-500">
+      Join your cohort. You will set up your profile next.
+    </p>
+
+    {% if error_message %}
+      <div class="error-state mt-5" role="alert">
+        <p>{{ error_message }}</p>
+      </div>
+    {% endif %}
+
+    {% if github_enabled %}
+      <a href="/api/auth/github/start" class="btn-secondary mt-6 w-full">Continue with GitHub</a>
+      <div class="my-6 flex items-center gap-3" aria-hidden="true">
+        <span class="h-px flex-1 bg-charcoal-200"></span>
+        <span class="text-xs uppercase tracking-wide text-charcoal-400">or</span>
+        <span class="h-px flex-1 bg-charcoal-200"></span>
+      </div>
+    {% endif %}
+
+    <form method="post" action="/signup" class="{% if not github_enabled %}mt-6{% endif %} space-y-4">
+      <input type="hidden" name="next" value="{{ next }}" />
+      <div>
+        <label class="label" for="display_name">Display name</label>
+        <input class="input" id="display_name" name="display_name" required minlength="2"
+               maxlength="120" autocomplete="name" value="{{ form_display_name or '' }}" />
+        <p class="hint">Others will mention you as @{{ (form_display_name or 'your-name') | replace(' ', '-') | lower }}</p>
+      </div>
+      <div>
+        <label class="label" for="email">Email</label>
+        <input class="input" id="email" name="email" type="email" required autocomplete="email"
+               value="{{ form_email or '' }}" />
+      </div>
+      <div>
+        <label class="label" for="password">Password</label>
+        <input class="input" id="password" name="password" type="password" required
+               minlength="10" autocomplete="new-password" aria-describedby="password-hint" />
+        <p class="hint" id="password-hint">
+          At least 10 characters, including a letter and a number.
+        </p>
+      </div>
+      <button type="submit" class="btn-primary w-full">Create account</button>
+    </form>
+
+    <p class="mt-6 text-center text-sm text-charcoal-500">
+      Already have an account?
+      <a href="/signin" class="font-medium text-ember-700 hover:text-ember-800">Sign in</a>
+    </p>
+  </div>
+{% endblock %}

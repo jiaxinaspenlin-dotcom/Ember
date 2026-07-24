@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import avatar, presence_dot, working_status_dot %}
+{% block title %}{{ member.display_name }} · Members{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-2xl px-4 py-8 sm:px-6">
+  <a href="/members" class="text-sm font-medium text-ember-700 hover:text-ember-800">← Members</a>
+
+  <section class="card-pad mt-3">
+    <div class="flex items-start gap-4">
+      <span class="relative shrink-0">
+        {{ avatar(member, 16) }}
+        <span class="absolute bottom-0.5 right-0.5">{{ presence_dot(member, ring=True) }}</span>
+      </span>
+      <div class="min-w-0 flex-1">
+        <h1 class="text-xl font-semibold tracking-tight">{{ member.display_name }}</h1>
+        <p class="mt-1 flex items-center gap-1.5 text-sm text-charcoal-500">
+          {{ working_status_dot(profile.working_status) }}
+          {{ profile.working_status.label }}
+        </p>
+        {% if profile.available_to_help %}
+          <span class="badge-green mt-2">Available to help</span>
+        {% endif %}
+      </div>
+      {% if not is_self %}
+        <form method="post" action="/dm/start">
+          <input type="hidden" name="user_id" value="{{ member.id }}" />
+          <button type="submit" class="btn-primary">
+            {{ 'Open conversation' if existing_conversation else 'Send a message' }}
+          </button>
+        </form>
+      {% else %}
+        <a href="/profile" class="btn-secondary">Edit profile</a>
+      {% endif %}
+    </div>
+
+    {% if profile.bio %}
+      <p class="mt-5 whitespace-pre-line text-sm text-charcoal-700">{{ profile.bio }}</p>
+    {% endif %}
+
+    <dl class="mt-6 grid gap-5 sm:grid-cols-2">
+      {% if profile.current_project %}
+        <div>
+          <dt class="text-xs font-semibold uppercase tracking-wide text-charcoal-500">Current project</dt>
+          <dd class="mt-1 text-sm">{{ profile.current_project }}</dd>
+        </div>
+      {% endif %}
+      {% if profile.project_area %}
+        <div>
+          <dt class="text-xs font-semibold uppercase tracking-wide text-charcoal-500">Project area</dt>
+          <dd class="mt-1 text-sm">{{ profile.project_area }}</dd>
+        </div>
+      {% endif %}
+      {% if profile.skill_names %}
+        <div class="sm:col-span-2">
+          <dt class="text-xs font-semibold uppercase tracking-wide text-charcoal-500">Skills</dt>
+          <dd class="mt-1.5">
+            <ul role="list" class="flex flex-wrap gap-1.5">
+              {% for skill in profile.skill_names %}
+                <li><a href="/members?skill={{ skill | lower | replace(' ', '-') }}" class="badge-neutral hover:bg-sand-300">{{ skill }}</a></li>
+              {% endfor %}
+            </ul>
+          </dd>
+        </div>
+      {% endif %}
+    </dl>
+
+    {% if not profile.bio and not profile.current_project and not profile.skill_names %}
+      <p class="mt-5 text-sm text-charcoal-400">
+        {{ member.display_name }} has not filled in their profile yet.
+      </p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import avatar, page_header %}
+{% block title %}Turn message into… · Ember{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6" x-data="{ tab: 'help' }">
+  {{ page_header('Turn this message into…',
+      'Keep the conversation, add the follow-through.') }}
+
+  <section class="card mb-6 p-4" aria-label="Source message">
+    <div class="flex gap-3">
+      {{ avatar(view.message.sender, 9) }}
+      <div class="min-w-0">
+        <p class="text-sm font-semibold">{{ view.message.sender.display_name }}</p>
+        <div class="prose-message mt-0.5">{{ view.message.body | render_body }}</div>
+        <p class="mt-1.5 text-xs text-charcoal-500">{{ view.message.created_at | absolute_time }}</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Action type">
+    <button type="button" role="tab" class="btn-sm" :class="tab === 'help' ? 'btn-primary' : 'btn-secondary'"
+            :aria-selected="tab === 'help'" @click="tab = 'help'">Help request</button>
+    <button type="button" role="tab" class="btn-sm" :class="tab === 'decision' ? 'btn-primary' : 'btn-secondary'"
+            :aria-selected="tab === 'decision'" @click="tab = 'decision'">Decision</button>
+    <button type="button" role="tab" class="btn-sm" :class="tab === 'task' ? 'btn-primary' : 'btn-secondary'"
+            :aria-selected="tab === 'task'" @click="tab = 'task'">Task</button>
+    <button type="button" role="tab" class="btn-sm" :class="tab === 'feedback' ? 'btn-primary' : 'btn-secondary'"
+            :aria-selected="tab === 'feedback'" @click="tab = 'feedback'">Feedback request</button>
+    <button type="button" role="tab" class="btn-sm" :class="tab === 'pin' ? 'btn-primary' : 'btn-secondary'"
+            :aria-selected="tab === 'pin'" @click="tab = 'pin'">Pinned resource</button>
+  </div>
+
+  <section class="card-pad" x-show="tab === 'help'" role="tabpanel" aria-label="Create a help request">
+    <h2 class="text-sm font-semibold">Create a help request</h2>
+    <form method="post" action="/help" class="mt-4 space-y-4">
+      <input type="hidden" name="source_message_id" value="{{ view.message.id }}" />
+      <div>
+        <label class="label" for="help-title">Title</label>
+        <input class="input" id="help-title" name="title" required minlength="4" maxlength="160"
+               value="{{ view.message.body[:80] }}" />
+      </div>
+      <div>
+        <label class="label" for="help-description">What do you need?</label>
+        <textarea class="input" id="help-description" name="description" rows="4" required>{{ view.message.body }}</textarea>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="label" for="help-category">Category</label>
+          <select class="input" id="help-category" name="category">
+            {% for category in HELP_CATEGORIES %}
+              <option value="{{ category.value }}">{{ category.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="label" for="help-urgency">Urgency</label>
+          <select class="input" id="help-urgency" name="urgency">
+            {% for priority in PRIORITIES %}
+              <option value="{{ priority.value }}" {% if priority.value == 'normal' %}selected{% endif %}>
+                {{ priority.label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn-primary">Create help request</button>
+    </form>
+  </section>
+
+  <section class="card-pad" x-show="tab === 'feedback'" x-cloak role="tabpanel"
+           aria-label="Request feedback">
+    <h2 class="text-sm font-semibold">Request feedback</h2>
+    <p class="mt-1 text-sm text-charcoal-500">
+      Feedback requests are tracked in the Help Queue with the Feedback category.
+    </p>
+    <form method="post" action="/help" class="mt-4 space-y-4">
+      <input type="hidden" name="source_message_id" value="{{ view.message.id }}" />
+      <input type="hidden" name="category" value="feedback" />
+      <div>
+        <label class="label" for="feedback-title">What do you want feedback on?</label>
+        <input class="input" id="feedback-title" name="title" required minlength="4" maxlength="160"
+               value="Feedback: {{ view.message.body[:60] }}" />
+      </div>
+      <div>
+        <label class="label" for="feedback-description">Context</label>
+        <textarea class="input" id="feedback-description" name="description" rows="4" required>{{ view.message.body }}</textarea>
+      </div>
+      <div>
+        <label class="label" for="feedback-urgency">Urgency</label>
+        <select class="input" id="feedback-urgency" name="urgency">
+          {% for priority in PRIORITIES %}
+            <option value="{{ priority.value }}" {% if priority.value == 'normal' %}selected{% endif %}>
+              {{ priority.label }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn-primary">Request feedback</button>
+    </form>
+  </section>
+
+  <section class="card-pad" x-show="tab === 'decision'" x-cloak role="tabpanel"
+           aria-label="Record a decision">
+    <h2 class="text-sm font-semibold">Record a decision</h2>
+    <form method="post" action="/decisions" class="mt-4 space-y-4">
+      <input type="hidden" name="source_message_id" value="{{ view.message.id }}" />
+      <div>
+        <label class="label" for="decision-title">Title</label>
+        <input class="input" id="decision-title" name="title" required minlength="4" maxlength="160"
+               value="{{ view.message.body[:80] }}" />
+      </div>
+      <div>
+        <label class="label" for="decision-text">What was decided?</label>
+        <textarea class="input" id="decision-text" name="decision_text" rows="3" required>{{ view.message.body }}</textarea>
+      </div>
+      <div>
+        <label class="label" for="decision-context">Context <span class="text-charcoal-400">(optional)</span></label>
+        <textarea class="input" id="decision-context" name="context" rows="3"
+                  placeholder="Why this was decided, alternatives considered…"></textarea>
+      </div>
+      <div>
+        <label class="label" for="decision-project">Related project <span class="text-charcoal-400">(optional)</span></label>
+        <input class="input" id="decision-project" name="related_project" maxlength="160" />
+      </div>
+      <button type="submit" class="btn-primary">Record decision</button>
+    </form>
+  </section>
+
+  <section class="card-pad" x-show="tab === 'task'" x-cloak role="tabpanel" aria-label="Create a task">
+    <h2 class="text-sm font-semibold">Create a task</h2>
+    <form method="post" action="/tasks" class="mt-4 space-y-4">
+      <input type="hidden" name="source_message_id" value="{{ view.message.id }}" />
+      <div>
+        <label class="label" for="task-title">Title</label>
+        <input class="input" id="task-title" name="title" required minlength="3" maxlength="160"
+               value="{{ view.message.body[:80] }}" />
+      </div>
+      <div>
+        <label class="label" for="task-description">Description <span class="text-charcoal-400">(optional)</span></label>
+        <textarea class="input" id="task-description" name="description" rows="3">{{ view.message.body }}</textarea>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div>
+          <label class="label" for="task-assignee">Assignee</label>
+          <select class="input" id="task-assignee" name="assignee_id">
+            <option value="">Unassigned</option>
+            {% for member in members %}
+              <option value="{{ member.id }}">{{ member.display_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="label" for="task-priority">Priority</label>
+          <select class="input" id="task-priority" name="priority">
+            {% for priority in PRIORITIES %}
+              <option value="{{ priority.value }}" {% if priority.value == 'normal' %}selected{% endif %}>
+                {{ priority.label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="label" for="task-due">Due date</label>
+          <input class="input" id="task-due" name="due_at" type="date" />
+        </div>
+      </div>
+      <button type="submit" class="btn-primary">Create task</button>
+    </form>
+  </section>
+
+  <section class="card-pad" x-show="tab === 'pin'" x-cloak role="tabpanel" aria-label="Pin as resource">
+    <h2 class="text-sm font-semibold">Pin as a channel resource</h2>
+    <p class="mt-1 text-sm text-charcoal-500">
+      Pinned messages appear at the top of the channel for everyone.
+    </p>
+    {% if view.can_pin %}
+      <form method="post" action="/messages/{{ view.message.id }}/pin-resource" class="mt-4">
+        <button type="submit" class="btn-primary">Pin this message</button>
+      </form>
+    {% else %}
+      <p class="mt-4 text-sm text-charcoal-500">
+        Only administrators can pin messages in a channel.
+      </p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

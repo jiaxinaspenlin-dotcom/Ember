@@ -1,0 +1,9 @@
+{# Response after sending a message: the new row, plus an out-of-band cursor
+   bump so the poller does not fetch the same message again. #}
+{% include "fragments/message_row.html" %}
+<div id="message-poller" hx-swap-oob="true"
+     hx-get="{{ poll_url }}?after_seq={{ latest_seq }}"
+     hx-trigger="every {{ POLLING_INTERVAL_MS }}ms"
+     hx-swap="outerHTML"
+     hx-target="this"
+     data-latest-seq="{{ latest_seq }}"></div>

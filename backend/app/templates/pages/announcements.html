@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import empty_state, page_header, priority_badge %}
+{% block title %}Announcements · Ember{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+  {{ page_header('Announcements', 'Cohort-wide updates from your administrators.') }}
+
+  {% if is_admin %}
+    <details class="card-pad mb-6">
+      <summary class="cursor-pointer text-sm font-semibold">Publish an announcement</summary>
+      <form method="post" action="/announcements" class="mt-4 space-y-4">
+        <div>
+          <label class="label" for="announcement-title">Title</label>
+          <input class="input" id="announcement-title" name="title" required minlength="4" maxlength="200" />
+        </div>
+        <div>
+          <label class="label" for="announcement-body">Body</label>
+          <textarea class="input" id="announcement-body" name="body" rows="4" required></textarea>
+        </div>
+        <div class="flex flex-wrap items-end gap-4">
+          <div>
+            <label class="label" for="announcement-priority">Priority</label>
+            <select class="input" id="announcement-priority" name="priority">
+              {% for priority in PRIORITIES %}
+                <option value="{{ priority.value }}" {% if priority.value == 'normal' %}selected{% endif %}>
+                  {{ priority.label }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <label class="flex items-center gap-2 pb-2.5 text-sm">
+            <input type="checkbox" name="is_pinned" value="true" class="rounded border-charcoal-300" />
+            Pin to the top
+          </label>
+        </div>
+        <button type="submit" class="btn-primary">Publish</button>
+      </form>
+    </details>
+  {% endif %}
+
+  {% if announcements %}
+    <ul role="list" class="space-y-3">
+      {% for announcement in announcements %}
+        <li id="announcement-{{ announcement.id }}"
+            class="card p-5 {% if announcement.is_pinned %}border-l-4 border-l-ember-500{% endif %}">
+          <div class="flex flex-wrap items-center gap-2">
+            <h2 class="text-base font-semibold text-charcoal-950">{{ announcement.title }}</h2>
+            {{ priority_badge(announcement.priority) }}
+            {% if announcement.is_pinned %}<span class="badge-neutral">Pinned</span>{% endif %}
+          </div>
+          <p class="mt-2 whitespace-pre-line text-sm text-charcoal-700">{{ announcement.body }}</p>
+          <div class="mt-3 flex items-center justify-between">
+            <p class="text-xs text-charcoal-500">
+              {{ announcement.author.display_name }} · {{ announcement.published_at | absolute_time }}
+              {% if announcement.expires_at %}
+                · expires {{ announcement.expires_at | relative_time }}
+              {% endif %}
+            </p>
+            {% if is_admin %}
+              <form method="post" action="/announcements/{{ announcement.id }}/delete">
+                <button type="submit" class="btn-ghost btn-sm text-red-700">Delete</button>
+              </form>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {{ empty_state('No announcements yet.',
+        'Administrators post cohort-wide updates here.' if not is_admin
+        else 'Publish the first announcement above.') }}
+  {% endif %}
+</div>
+{% endblock %}

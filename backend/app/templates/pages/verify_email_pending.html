@@ -1,0 +1,36 @@
+{% extends "auth_base.html" %}
+{% block title %}Confirm your email · Ember{% endblock %}
+
+{% block content %}
+  <div class="card-pad">
+    <h1 class="text-2xl font-semibold tracking-tight">Confirm your email</h1>
+    <p class="mt-2 text-sm text-charcoal-600">
+      {% if email %}
+        We sent a confirmation link to <span class="font-medium text-charcoal-900">{{ email }}</span>.
+        Open it to activate your account.
+      {% else %}
+        Open the confirmation link we emailed you to activate your account.
+      {% endif %}
+    </p>
+
+    {% if notice %}
+      <div class="mt-5 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"
+           role="status">{{ notice }}</div>
+    {% endif %}
+
+    {% if signed_in %}
+      <form method="post" action="/verify-email/resend" class="mt-6">
+        <button type="submit" class="btn-primary w-full">Resend the confirmation email</button>
+      </form>
+      <form method="post" action="/signout" class="mt-2">
+        <button type="submit" class="btn-ghost w-full">Sign out</button>
+      </form>
+    {% else %}
+      <a href="/signin" class="btn-primary mt-6 w-full">Sign in</a>
+    {% endif %}
+
+    <p class="mt-6 text-xs text-charcoal-500">
+      The link expires soon and can be used once. Check your spam folder if it hasn't arrived.
+    </p>
+  </div>
+{% endblock %}

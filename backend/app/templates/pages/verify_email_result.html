@@ -1,0 +1,18 @@
+{% extends "auth_base.html" %}
+{% block title %}Email confirmation · Ember{% endblock %}
+
+{% block content %}
+  <div class="card-pad">
+    {% if ok %}
+      <h1 class="text-2xl font-semibold tracking-tight">Email confirmed</h1>
+      <p class="mt-2 text-sm text-charcoal-600">Your address is confirmed. You can sign in now.</p>
+      <a href="/signin" class="btn-primary mt-6 w-full">Sign in</a>
+    {% else %}
+      <p class="text-xs font-semibold uppercase tracking-wide text-ember-700">Link problem</p>
+      <h1 class="mt-2 text-2xl font-semibold tracking-tight">This link didn't work</h1>
+      <p class="mt-2 text-sm text-charcoal-600">{{ message }}</p>
+      <a href="/verify-email" class="btn-primary mt-6 w-full">Request a new link</a>
+      <a href="/signin" class="btn-ghost mt-2 w-full">Back to sign in</a>
+    {% endif %}
+  </div>
+{% endblock %}

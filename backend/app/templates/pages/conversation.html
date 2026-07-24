@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import avatar, empty_state %}
+{% block title %}{{ other_member.display_name }} · Ember{% endblock %}
+
+{% block content %}
+<div class="flex h-[calc(100vh-3.75rem)] flex-col">
+  <header class="border-b border-charcoal-200 bg-white px-4 py-3 sm:px-6">
+    <div class="mx-auto flex w-full max-w-4xl items-center gap-3">
+      <a href="/dm" class="btn-ghost btn-sm lg:hidden">Back</a>
+      {{ avatar(other_member, 9) }}
+      <div class="min-w-0">
+        <h1 class="truncate text-base font-semibold">{{ other_member.display_name }}</h1>
+        <p class="text-xs text-charcoal-500">Private conversation</p>
+      </div>
+      <a href="/members/{{ other_member.id }}" class="btn-secondary btn-sm ml-auto">View profile</a>
+    </div>
+  </header>
+
+  <div id="message-scroll" class="flex-1 overflow-y-auto scrollbar-slim">
+    <div class="mx-auto w-full max-w-4xl py-4">
+      {% if has_older and oldest_seq %}
+        <div id="older-loader" class="flex justify-center py-3">
+          <button type="button" class="btn-secondary btn-sm"
+                  hx-get="/hx/dm/{{ conversation.id }}/older?before_seq={{ oldest_seq }}"
+                  hx-target="#older-loader" hx-swap="outerHTML">
+            Load older messages
+          </button>
+        </div>
+      {% endif %}
+
+      <div id="message-list">
+        {% for view in message_views %}
+          {% include "fragments/message_row.html" %}
+        {% else %}
+          <div class="px-4 py-10 sm:px-6">
+            {{ empty_state('No messages yet. Start the conversation.') }}
+          </div>
+        {% endfor %}
+
+        <div id="message-poller"
+             hx-get="/hx/dm/{{ conversation.id }}/stream?after_seq={{ latest_seq }}"
+             hx-trigger="every {{ POLLING_INTERVAL_MS }}ms"
+             hx-swap="outerHTML"
+             hx-target="this"
+             data-latest-seq="{{ latest_seq }}"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="border-t border-charcoal-200 bg-white px-4 py-3 sm:px-6">
+    <div class="mx-auto w-full max-w-4xl">
+      <form id="composer"
+            hx-post="/hx/dm/{{ conversation.id }}/messages"
+            hx-target="#message-poller"
+            hx-swap="beforebegin"
+            hx-on::after-request="if(event.detail.successful){this.reset();window.emberScrollToBottom&&window.emberScrollToBottom();}"
+            class="flex items-end gap-2">
+        <div class="flex-1">
+          <label class="sr-only" for="composer-body">Message {{ other_member.display_name }}</label>
+          <textarea id="composer-body" name="body" rows="2" required maxlength="8000"
+                    class="input resize-none"
+                    placeholder="Message {{ other_member.display_name }}"
+                    data-submit-on-enter></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Send</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

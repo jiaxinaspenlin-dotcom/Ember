@@ -1,0 +1,7 @@
+{# Inline error for HTMX responses. Never silently swallowed. #}
+<div class="error-state" role="alert">
+  <p class="font-semibold">{{ error.message }}</p>
+  {% if error.retryable %}
+    <p class="text-xs">This is usually temporary — please try again.</p>
+  {% endif %}
+</div>

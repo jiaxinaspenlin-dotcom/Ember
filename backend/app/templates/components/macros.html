@@ -1,0 +1,108 @@
+{# Reusable presentation macros. All flags are computed server-side. #}
+
+{# Sizes are literal class strings so Tailwind's scanner can see them. #}
+{% set AVATAR_SIZES = {
+  5: 'h-5 w-5 text-[0.5rem]', 6: 'h-6 w-6 text-[0.625rem]', 7: 'h-7 w-7 text-[0.6875rem]',
+  8: 'h-8 w-8 text-xs', 9: 'h-9 w-9 text-xs', 10: 'h-10 w-10 text-sm',
+  11: 'h-11 w-11 text-sm', 14: 'h-14 w-14 text-base', 16: 'h-16 w-16 text-lg'
+} %}
+
+{% macro avatar(user, size=9) %}
+  {% set classes = AVATAR_SIZES.get(size, 'h-9 w-9 text-xs') %}
+  {% if user.avatar_url %}
+    <img src="{{ user.avatar_url }}" alt=""
+         class="{{ classes }} shrink-0 rounded-full bg-sand-200 object-cover" />
+  {% else %}
+    <span class="{{ classes }} flex shrink-0 items-center justify-center rounded-full font-semibold text-white"
+          style="background: hsl({{ user.id | avatar_hue }} 62% 48%)" aria-hidden="true">
+      {{ user.display_name | initials }}
+    </span>
+  {% endif %}
+{% endmacro %}
+
+{% macro empty_state(title, description, action_label=None, action_href=None) %}
+  <div class="empty-state">
+    <img src="/static/img/ember-mark.svg" alt="" class="mb-4 h-8 w-8 opacity-40" aria-hidden="true" />
+    <p class="text-base font-medium text-charcoal-900">{{ title }}</p>
+    {% if description %}
+      <p class="mt-1.5 max-w-md text-sm text-charcoal-500">{{ description }}</p>
+    {% endif %}
+    {% if action_label and action_href %}
+      <a href="{{ action_href }}" class="btn-primary mt-5">{{ action_label }}</a>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{% macro status_badge(status_value, label) %}
+  {% set tone = {
+    'open': 'badge-amber', 'claimed': 'badge-blue', 'resolved': 'badge-green',
+    'cancelled': 'badge-neutral', 'active': 'badge-green', 'superseded': 'badge-neutral',
+    'reversed': 'badge-red', 'todo': 'badge-neutral', 'in_progress': 'badge-blue',
+    'blocked': 'badge-red', 'done': 'badge-green'
+  }.get(status_value, 'badge-neutral') %}
+  <span class="{{ tone }}">{{ label }}</span>
+{% endmacro %}
+
+{% macro priority_badge(priority) %}
+  {% set tone = {
+    'low': 'badge-neutral', 'normal': 'badge-blue',
+    'high': 'badge-amber', 'urgent': 'badge-red'
+  }.get(priority.value, 'badge-neutral') %}
+  <span class="{{ tone }}">{{ priority.label }}</span>
+{% endmacro %}
+
+{% macro working_status_dot(status) %}
+  {% set tone = {
+    'available_to_help': 'bg-emerald-500', 'building': 'bg-sky-500',
+    'in_focus_mode': 'bg-violet-500', 'blocked': 'bg-red-500', 'away': 'bg-charcoal-300'
+  }.get(status.value, 'bg-charcoal-300') %}
+  <span class="inline-block h-2 w-2 rounded-full {{ tone }}" aria-hidden="true"></span>
+{% endmacro %}
+
+{# Presence dot for a user, driven by their last_active_at via the `presence` filter. #}
+{% macro presence_dot(user, ring=False) %}
+  {% set state = user.last_active_at | presence %}
+  {% set tone = {'online': 'bg-emerald-500', 'away': 'bg-amber-400', 'offline': 'bg-charcoal-300'}[state] %}
+  <span class="inline-block h-2.5 w-2.5 rounded-full {{ tone }}{% if ring %} ring-2 ring-sand-50{% endif %}"
+        title="{{ state | capitalize }}" aria-label="{{ state }}"></span>
+{% endmacro %}
+
+{% macro pagination(total, offset, page_size, base_path, query='') %}
+  {% if total > page_size %}
+    <nav class="mt-6 flex items-center justify-between border-t border-charcoal-200 pt-4"
+         aria-label="Pagination">
+      <p class="text-sm text-charcoal-500">
+        Showing {{ offset + 1 }}–{{ [offset + page_size, total] | min }} of {{ total }}
+      </p>
+      <div class="flex gap-2">
+        {% if offset > 0 %}
+          <a class="btn-secondary btn-sm"
+             href="{{ base_path }}?offset={{ [offset - page_size, 0] | max }}{{ query }}">Previous</a>
+        {% endif %}
+        {% if offset + page_size < total %}
+          <a class="btn-secondary btn-sm"
+             href="{{ base_path }}?offset={{ offset + page_size }}{{ query }}">Next</a>
+        {% endif %}
+      </div>
+    </nav>
+  {% endif %}
+{% endmacro %}
+
+{% macro page_header(title, subtitle=None) %}
+  <header class="mb-6">
+    <h1 class="text-2xl font-semibold tracking-tight text-charcoal-950">{{ title }}</h1>
+    {% if subtitle %}
+      <p class="mt-1 text-sm text-charcoal-500">{{ subtitle }}</p>
+    {% endif %}
+  </header>
+{% endmacro %}
+
+{% macro stat_tile(label, value, href=None, tone='neutral') %}
+  {% set border = {'ember': 'border-l-ember-500', 'neutral': 'border-l-charcoal-300'}.get(tone) %}
+  {% if href %}<a href="{{ href }}" class="block">{% endif %}
+  <div class="card border-l-4 {{ border }} px-4 py-3 {% if href %}transition-shadow hover:shadow-lift{% endif %}">
+    <p class="text-xs font-medium uppercase tracking-wide text-charcoal-500">{{ label }}</p>
+    <p class="mt-1 text-2xl font-semibold tabular-nums text-charcoal-950">{{ value }}</p>
+  </div>
+  {% if href %}</a>{% endif %}
+{% endmacro %}

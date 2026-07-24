@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import avatar, empty_state %}
+{% block title %}Thread · Ember{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+  <a href="{{ back_link }}" class="text-sm font-medium text-ember-700 hover:text-ember-800">
+    ← Back to {{ source_label }}
+  </a>
+
+  <header class="mb-5 mt-3">
+    <h1 class="text-2xl font-semibold tracking-tight">Thread</h1>
+    <p class="mt-1 text-sm text-charcoal-500">
+      In {{ source_label }} · {{ parent_view.message.reply_count | pluralize('reply', 'replies') }}
+      {% if participants %}
+        · {{ participants | length | pluralize('participant') }}
+      {% endif %}
+    </p>
+  </header>
+
+  <div class="card overflow-hidden">
+    <div class="border-b-2 border-ember-200 bg-ember-50/50">
+      {% with view = parent_view %}
+        {% include "fragments/message_row.html" %}
+      {% endwith %}
+    </div>
+
+    <div id="thread-replies" class="divide-y divide-charcoal-100">
+      {% for view in reply_views %}
+        {% include "fragments/message_row.html" %}
+      {% else %}
+        <div class="p-6">
+          {{ empty_state('No replies yet.', 'Reply below to keep the discussion together.') }}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% if can_reply %}
+    <form class="mt-4 flex items-end gap-2"
+          hx-post="/hx/threads/{{ parent_view.message.id }}/replies"
+          hx-target="#thread-replies"
+          hx-swap="beforeend"
+          hx-on::after-request="if(event.detail.successful){this.reset();}">
+      <div class="flex-1">
+        <label class="sr-only" for="reply-body">Reply in this thread</label>
+        <textarea id="reply-body" name="body" rows="2" required maxlength="8000"
+                  class="input resize-none" placeholder="Reply…" data-submit-on-enter></textarea>
+      </div>
+      <button type="submit" class="btn-primary">Reply</button>
+    </form>
+  {% else %}
+    <p class="mt-4 text-center text-sm text-charcoal-500">
+      This channel is archived, so the thread is read-only.
+    </p>
+  {% endif %}
+
+  {% if participants %}
+    <section class="mt-6" aria-labelledby="participants-heading">
+      <h2 id="participants-heading" class="text-xs font-semibold uppercase tracking-wide text-charcoal-500">
+        Participants
+      </h2>
+      <ul role="list" class="mt-2 flex flex-wrap gap-2">
+        {% for person in participants %}
+          <li class="flex items-center gap-2 rounded-full border border-charcoal-200 bg-white px-2.5 py-1">
+            {{ avatar(person, 5) }}
+            <span class="text-xs">{{ person.display_name }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

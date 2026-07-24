@@ -1,0 +1,13 @@
+{# Older history, prepended above the current view. #}
+{% if has_older and oldest_seq %}
+  <div id="older-loader" class="flex justify-center py-3">
+    <button type="button" class="btn-secondary btn-sm"
+            hx-get="{{ older_url }}?before_seq={{ oldest_seq }}"
+            hx-target="#older-loader" hx-swap="outerHTML">
+      Load older messages
+    </button>
+  </div>
+{% endif %}
+{% for view in views %}
+  {% include "fragments/message_row.html" %}
+{% endfor %}

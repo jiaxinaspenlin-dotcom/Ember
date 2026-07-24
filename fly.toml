@@ -1,0 +1,48 @@
+# Fly.io deployment for Ember (alternative to Render).
+#
+#   fly launch --no-deploy
+#   fly secrets set DATABASE_URL=... SESSION_SECRET=... \
+#       GITHUB_CLIENT_ID=... GITHUB_CLIENT_SECRET=...
+#   fly deploy
+#
+# Migrations run as a release command, so they finish before new machines
+# start serving traffic.
+
+app = "ember"
+primary_region = "iad"
+
+[build]
+  dockerfile = "backend/Dockerfile"
+
+[deploy]
+  release_command = "alembic upgrade head"
+
+[env]
+  ENVIRONMENT = "production"
+  PORT = "8000"
+  SESSION_COOKIE_NAME = "ember_session"
+  SESSION_MAX_AGE_DAYS = "30"
+  POLLING_INTERVAL_MS = "4000"
+  # Fly's proxy sets X-Forwarded-For, so it can be trusted for rate limiting.
+  TRUST_PROXY_HEADERS = "true"
+  FRONTEND_URL = "https://ember.fly.dev"
+  BACKEND_URL = "https://ember.fly.dev"
+  GITHUB_OAUTH_REDIRECT_URI = "https://ember.fly.dev/api/auth/github/callback"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "15s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/api/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

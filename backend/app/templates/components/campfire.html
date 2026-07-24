@@ -1,0 +1,118 @@
+{# The cohort campfire. Grows with `pulse.level` (0..5). Pure CSS, CSP-safe. #}
+<section class="campfire-card mb-7 overflow-hidden rounded-2xl border border-charcoal-800
+                bg-gradient-to-b from-[#1c1917] to-[#2a1710] text-sand-50"
+         style="--lvl: {{ pulse.level }};">
+  <div class="flex flex-col items-center gap-4 px-6 py-7 sm:flex-row sm:justify-between">
+    <div class="order-2 text-center sm:order-1 sm:text-left">
+      <p class="text-[0.7rem] font-medium uppercase tracking-wider text-amber-200/70">
+        Cohort pulse · last {{ pulse.window_days }} days
+      </p>
+      <p class="mt-1 text-2xl font-semibold text-amber-50">{{ pulse.label }}</p>
+      <p class="mt-1 text-sm text-amber-100/70">
+        <span class="font-medium text-emerald-300">{{ online_now }}</span> online now
+        · {{ pulse.score }} pulse
+      </p>
+      <div class="mt-3 flex flex-wrap justify-center gap-x-3 gap-y-1 text-xs text-amber-100/60 sm:justify-start">
+        {% if pulse.counts.messages %}<span>💬 {{ pulse.counts.messages }}</span>{% endif %}
+        {% if pulse.counts.decisions %}<span>⚖️ {{ pulse.counts.decisions }}</span>{% endif %}
+        {% if pulse.counts.tasks_completed %}<span>✅ {{ pulse.counts.tasks_completed }}</span>{% endif %}
+        {% if pulse.counts.help_resolved %}<span>🤝 {{ pulse.counts.help_resolved }}</span>{% endif %}
+        {% if pulse.counts.kudos %}<span>🔥 {{ pulse.counts.kudos }}</span>{% endif %}
+        {% if pulse.counts.check_ins %}<span>📌 {{ pulse.counts.check_ins }}</span>{% endif %}
+        {% if pulse.counts.new_members %}<span>👋 {{ pulse.counts.new_members }}</span>{% endif %}
+      </div>
+    </div>
+
+    <div class="order-1 sm:order-2" aria-hidden="true">
+      <div class="campfire">
+        <div class="glow"></div>
+        <div class="flame flame-outer"></div>
+        <div class="flame flame-mid"></div>
+        <div class="flame flame-inner"></div>
+        <div class="logs"><span></span><span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .campfire {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    /* Whole fire scales with the pulse level. */
+    --scale: calc(0.4 + var(--lvl, 0) * 0.13);
+  }
+  .campfire .glow {
+    position: absolute;
+    bottom: 6px;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(251,146,60,0.55) 0%, rgba(251,146,60,0) 68%);
+    opacity: calc(0.15 + var(--lvl, 0) * 0.16);
+    filter: blur(4px);
+    animation: campfire-glow 2.4s ease-in-out infinite alternate;
+  }
+  .campfire .flame {
+    position: absolute;
+    bottom: 20px;
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    transform-origin: 50% 90%;
+    transform: rotate(-45deg) scale(var(--scale));
+    filter: blur(1px);
+  }
+  .campfire .flame-outer {
+    width: 46px; height: 46px;
+    background: linear-gradient(to top right, #ea580c, #f97316 55%, #fb923c);
+    animation: campfire-flicker 1.7s ease-in-out infinite alternate;
+    opacity: calc(0.35 + var(--lvl, 0) * 0.13);
+  }
+  .campfire .flame-mid {
+    width: 32px; height: 32px;
+    background: linear-gradient(to top right, #f97316, #fbbf24 60%, #fde68a);
+    animation: campfire-flicker 1.15s ease-in-out infinite alternate;
+  }
+  .campfire .flame-inner {
+    width: 18px; height: 18px;
+    bottom: 24px;
+    background: linear-gradient(to top right, #fbbf24, #fef3c7);
+    animation: campfire-flicker 0.8s ease-in-out infinite alternate;
+  }
+  .campfire .logs {
+    position: absolute;
+    bottom: 8px;
+    width: 66px;
+    height: 16px;
+  }
+  .campfire .logs span {
+    position: absolute;
+    left: 50%;
+    top: 4px;
+    width: 66px;
+    height: 9px;
+    margin-left: -33px;
+    border-radius: 5px;
+    background: linear-gradient(#7c4a25, #5b3418);
+  }
+  .campfire .logs span:first-child { transform: rotate(20deg); }
+  .campfire .logs span:last-child  { transform: rotate(-20deg); }
+
+  @keyframes campfire-flicker {
+    0%   { transform: rotate(-45deg) scale(var(--scale)) translateY(0); }
+    50%  { transform: rotate(-46deg) scale(calc(var(--scale) * 1.06)) translateY(-2px); }
+    100% { transform: rotate(-44deg) scale(calc(var(--scale) * 0.97)) translateY(1px); }
+  }
+  @keyframes campfire-glow {
+    from { opacity: calc(0.12 + var(--lvl, 0) * 0.13); }
+    to   { opacity: calc(0.22 + var(--lvl, 0) * 0.18); }
+  }
+  /* An ember-cold cohort: barely a wisp. */
+  .campfire-card[style*="--lvl: 0"] .flame { opacity: 0.28; }
+  @media (prefers-reduced-motion: reduce) {
+    .campfire .flame, .campfire .glow { animation: none; }
+  }
+</style>

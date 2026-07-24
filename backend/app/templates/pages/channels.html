@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import empty_state, page_header %}
+{% block title %}Channels · Ember{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
+  {{ page_header(
+      'Archived channels' if showing_archived else 'Channels',
+      'Archived channels stay readable and searchable, but no new messages can be posted.'
+        if showing_archived else 'Public spaces for your cohort.') }}
+
+  <div class="mb-6 flex flex-wrap items-center gap-2">
+    <a href="/channels" class="btn-sm {{ 'btn-primary' if not showing_archived else 'btn-secondary' }}">Active</a>
+    <a href="/channels?archived=true" class="btn-sm {{ 'btn-primary' if showing_archived else 'btn-secondary' }}">Archived</a>
+  </div>
+
+  {% if not showing_archived %}
+    <section class="card-pad mb-6" aria-labelledby="create-channel-heading">
+      <h2 id="create-channel-heading" class="text-sm font-semibold">Create a channel</h2>
+      <form method="post" action="/channels" class="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="label" for="channel-name">Name</label>
+          <input class="input" id="channel-name" name="name" required minlength="2" maxlength="80"
+                 placeholder="e.g. product-feedback" />
+        </div>
+        <div>
+          <label class="label" for="channel-topic">Topic <span class="text-charcoal-400">(optional)</span></label>
+          <input class="input" id="channel-topic" name="topic" maxlength="200" />
+        </div>
+        <div class="sm:col-span-2">
+          <label class="label" for="channel-description">Description <span class="text-charcoal-400">(optional)</span></label>
+          <input class="input" id="channel-description" name="description" maxlength="300" />
+        </div>
+        <div class="sm:col-span-2">
+          <button type="submit" class="btn-primary">Create channel</button>
+        </div>
+      </form>
+    </section>
+  {% endif %}
+
+  {% if channel_items %}
+    <ul role="list" class="grid gap-3 sm:grid-cols-2">
+      {% for item in channel_items %}
+        <li class="card p-4">
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0">
+              <a href="/channels/{{ item.channel.slug }}"
+                 class="text-sm font-semibold text-charcoal-950 hover:text-ember-700">
+                <span class="text-charcoal-400" aria-hidden="true">#</span>{{ item.channel.name }}
+              </a>
+              {% if item.channel.topic %}
+                <p class="mt-1 line-clamp-2 text-xs text-charcoal-500">{{ item.channel.topic }}</p>
+              {% elif item.channel.description %}
+                <p class="mt-1 line-clamp-2 text-xs text-charcoal-500">{{ item.channel.description }}</p>
+              {% endif %}
+            </div>
+            <div class="flex shrink-0 flex-col items-end gap-1">
+              {% if item.channel.is_archived %}<span class="badge-neutral">Archived</span>{% endif %}
+              {% if item.unread_count %}
+                <span class="badge-ember tabular-nums">{{ item.unread_count }} new</span>
+              {% endif %}
+            </div>
+          </div>
+          <div class="mt-3 flex items-center justify-between">
+            <p class="text-xs text-charcoal-500">
+              {% if item.last_message_at %}
+                Active {{ item.last_message_at | relative_time }}
+              {% else %}
+                No messages yet
+              {% endif %}
+            </p>
+            {% if item.is_member %}
+              <span class="badge-green">Joined</span>
+            {% elif not item.channel.is_archived %}
+              <form method="post" action="/channels/{{ item.channel.slug }}/join">
+                <button type="submit" class="btn-secondary btn-sm">Join</button>
+              </form>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% elif showing_archived %}
+    {{ empty_state('No archived channels.', 'Channels you archive will appear here.') }}
+  {% else %}
+    {{ empty_state('No channels yet.', 'Create the first channel above.') }}
+  {% endif %}
+</div>
+{% endblock %}

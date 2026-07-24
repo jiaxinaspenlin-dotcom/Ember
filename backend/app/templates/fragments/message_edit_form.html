@@ -1,0 +1,13 @@
+{# Inline edit form; replaces the message body until saved or cancelled. #}
+<form hx-post="/hx/messages/{{ message.id }}/edit"
+      hx-target="#message-{{ message.id }}" hx-swap="outerHTML" class="mt-1 space-y-2">
+  <label class="sr-only" for="edit-body-{{ message.id }}">Edit message</label>
+  <textarea id="edit-body-{{ message.id }}" name="body" rows="3" required maxlength="8000"
+            class="input resize-none">{{ message.body }}</textarea>
+  <div class="flex gap-2">
+    <button type="submit" class="btn-primary btn-sm">Save</button>
+    <button type="button" class="btn-secondary btn-sm"
+            hx-get="/hx/messages/{{ message.id }}/cancel-edit"
+            hx-target="#message-{{ message.id }}" hx-swap="outerHTML">Cancel</button>
+  </div>
+</form>

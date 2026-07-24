@@ -1,0 +1,15 @@
+{# Slim top bar: quick search and quick actions. #}
+<header class="sticky top-0 z-30 border-b border-charcoal-200 bg-sand-100/90 backdrop-blur">
+  {# Left padding stays wide enough to clear the fixed hamburger until `lg`,
+     where the sidebar is visible and the hamburger is hidden. #}
+  <div class="mx-auto flex w-full max-w-6xl items-center gap-3 py-3 pr-4 pl-14 sm:pr-6 lg:pl-6">
+    <form action="/search" method="get" class="flex-1" role="search">
+      <label for="topbar-search" class="sr-only">Search Ember</label>
+      <input id="topbar-search" name="q" type="search" class="input"
+             placeholder="Search messages, decisions, help requests…"
+             value="{{ query if active_nav == 'search' else '' }}" />
+    </form>
+    <a href="/help" class="btn-secondary hidden sm:inline-flex">Ask for help</a>
+    <a href="/members" class="btn-primary">New message</a>
+  </div>
+</header>

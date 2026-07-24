@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/static/fonts/inter-var.woff2") format("woff2");
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-sand-100 text-charcoal-950 font-sans antialiased;
+  }
+
+  /* Visible, consistent focus for every interactive element. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ember-500 ring-offset-2 ring-offset-sand-100 rounded-md;
+  }
+
+  ::selection {
+    @apply bg-ember-200 text-charcoal-950;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2
+           text-sm font-medium transition-colors disabled:opacity-50
+           disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-ember-600 text-white hover:bg-ember-700 active:bg-ember-800;
+  }
+
+  .btn-secondary {
+    @apply btn bg-white text-charcoal-900 border border-charcoal-200
+           hover:bg-sand-50 hover:border-charcoal-300;
+  }
+
+  .btn-ghost {
+    @apply btn text-charcoal-600 hover:bg-sand-200 hover:text-charcoal-900;
+  }
+
+  .btn-danger {
+    @apply btn bg-white text-red-700 border border-red-200 hover:bg-red-50;
+  }
+
+  .btn-sm {
+    @apply px-2.5 py-1.5 text-xs;
+  }
+
+  .card {
+    @apply bg-white rounded-xl border border-charcoal-200/70 shadow-card;
+  }
+
+  .card-pad {
+    @apply card p-5;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-charcoal-200 bg-white px-3 py-2 text-sm
+           text-charcoal-950 placeholder:text-charcoal-400
+           focus:border-ember-400 focus:ring-2 focus:ring-ember-200 focus:outline-none;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-charcoal-800 mb-1.5;
+  }
+
+  .hint {
+    @apply text-xs text-charcoal-500 mt-1.5;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium;
+  }
+
+  .badge-neutral {
+    @apply badge bg-sand-200 text-charcoal-700;
+  }
+
+  .badge-ember {
+    @apply badge bg-ember-100 text-ember-800;
+  }
+
+  .badge-green {
+    @apply badge bg-emerald-100 text-emerald-800;
+  }
+
+  .badge-blue {
+    @apply badge bg-sky-100 text-sky-800;
+  }
+
+  .badge-red {
+    @apply badge bg-red-100 text-red-800;
+  }
+
+  .badge-amber {
+    @apply badge bg-amber-100 text-amber-900;
+  }
+
+  .nav-link {
+    @apply flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium
+           text-charcoal-700 hover:bg-sand-200 hover:text-charcoal-950 transition-colors;
+  }
+
+  .nav-link-active {
+    @apply bg-white text-charcoal-950 shadow-card;
+  }
+
+  .empty-state {
+    @apply flex flex-col items-center justify-center rounded-xl border border-dashed
+           border-charcoal-300 bg-white/60 px-6 py-12 text-center;
+  }
+
+  .error-state {
+    @apply flex flex-col items-start gap-2 rounded-xl border border-red-300
+           bg-red-50 px-5 py-4 text-sm text-red-800;
+  }
+
+  .mention {
+    @apply rounded bg-ember-100 px-1 font-medium text-ember-800;
+  }
+
+  .message-link {
+    @apply text-ember-700 underline underline-offset-2 hover:text-ember-800;
+  }
+
+  .prose-message {
+    @apply text-[0.9375rem] leading-relaxed text-charcoal-900 break-words;
+  }
+
+  .skip-link {
+    @apply absolute left-4 top-4 -translate-y-24 rounded-lg bg-charcoal-950 px-4 py-2
+           text-sm font-medium text-white transition-transform focus:translate-y-0 z-50;
+  }
+}
+
+@layer utilities {
+  .scrollbar-slim::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .scrollbar-slim::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-charcoal-200;
+  }
+
+  .scrollbar-slim::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+/* Respect the user's motion preference everywhere. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,82 @@
+{% extends "auth_base.html" %}
+{% block title %}Your cohorts · Ember{% endblock %}
+
+{% block content %}
+  <div class="w-full max-w-lg">
+    <h1 class="text-2xl font-semibold tracking-tight">Your cohorts</h1>
+    <p class="mt-1.5 text-sm text-charcoal-500">
+      A cohort is your workspace. You can belong to as many as you like.
+    </p>
+
+    {% if error_message %}
+      <div class="error-state mt-5" role="alert"><p>{{ error_message }}</p></div>
+    {% endif %}
+
+    {% if my_cohorts %}
+      <ul role="list" class="mt-6 space-y-2">
+        {% for item in my_cohorts %}
+          <li>
+            <form method="post" action="/cohorts/{{ item.cohort.slug }}/switch">
+              <button type="submit"
+                      class="card flex w-full items-center justify-between p-4 text-left transition-shadow hover:shadow-lift">
+                <span>
+                  <span class="block text-sm font-semibold text-charcoal-950">{{ item.cohort.name }}</span>
+                  <span class="block text-xs text-charcoal-500">
+                    {{ item.member_count }} {{ 'member' if item.member_count == 1 else 'members' }}
+                    {% if item.membership.is_admin %} · you are an admin{% endif %}
+                  </span>
+                </span>
+                <span class="text-ember-700" aria-hidden="true">→</span>
+              </button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    <section class="card-pad mt-6">
+      <h2 class="text-sm font-semibold">Create a cohort</h2>
+      <p class="mt-1 text-xs text-charcoal-500">You'll be its admin.</p>
+      <form method="post" action="/cohorts" class="mt-3 space-y-3">
+        <div>
+          <label class="label" for="cohort-name">Name</label>
+          <input class="input" id="cohort-name" name="name" required minlength="2" maxlength="80"
+                 placeholder="e.g. Summer 2026 Builders" />
+        </div>
+        <div>
+          <label class="label" for="cohort-desc">Description <span class="text-charcoal-400">(optional)</span></label>
+          <input class="input" id="cohort-desc" name="description" maxlength="300" />
+        </div>
+        <button type="submit" class="btn-primary w-full">Create cohort</button>
+      </form>
+    </section>
+
+    {% if open_join and joinable_cohorts %}
+      <section class="card-pad mt-4">
+        <h2 class="text-sm font-semibold">Discover cohorts</h2>
+        <p class="mt-1 text-xs text-charcoal-500">
+          Anyone can join these while the demo is open. When shipped, joining needs an invite link.
+        </p>
+        <ul role="list" class="mt-3 space-y-2">
+          {% for item in joinable_cohorts %}
+            <li class="flex items-center justify-between gap-3">
+              <span class="min-w-0">
+                <span class="block truncate text-sm font-medium">{{ item.cohort.name }}</span>
+                <span class="block text-xs text-charcoal-500">
+                  {{ item.member_count }} {{ 'member' if item.member_count == 1 else 'members' }}
+                </span>
+              </span>
+              <form method="post" action="/cohorts/{{ item.cohort.slug }}/join">
+                <button type="submit" class="btn-secondary btn-sm">Join</button>
+              </form>
+            </li>
+          {% endfor %}
+        </ul>
+      </section>
+    {% endif %}
+
+    <form method="post" action="/signout" class="mt-6 text-center">
+      <button type="submit" class="text-sm text-charcoal-500 hover:text-charcoal-800">Sign out</button>
+    </form>
+  </div>
+{% endblock %}

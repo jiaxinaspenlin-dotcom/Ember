@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import avatar, empty_state, page_header %}
+{% block title %}Direct messages · Ember{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+  {{ page_header('Direct messages', 'Private one-to-one conversations. Only participants can read them.') }}
+
+  {% if conversations %}
+    <ul role="list" class="card divide-y divide-charcoal-100">
+      {% for item in conversations %}
+        <li>
+          <a href="/dm/{{ item.conversation.id }}"
+             class="flex items-center gap-3 px-5 py-4 hover:bg-sand-50">
+            {{ avatar(item.other_member, 10) }}
+            <div class="min-w-0 flex-1">
+              <div class="flex items-baseline justify-between gap-2">
+                <span class="truncate text-sm font-medium text-charcoal-950">
+                  {{ item.other_member.display_name }}
+                </span>
+                {% if item.conversation.last_message_at %}
+                  <time class="shrink-0 text-xs text-charcoal-400"
+                        datetime="{{ item.conversation.last_message_at | iso_time }}">
+                    {{ item.conversation.last_message_at | relative_time }}
+                  </time>
+                {% endif %}
+              </div>
+              {% if item.last_message %}
+                <p class="mt-0.5 truncate text-sm text-charcoal-500">
+                  {{ 'Message deleted' if item.last_message.deleted_at else item.last_message.body }}
+                </p>
+              {% else %}
+                <p class="mt-0.5 text-sm text-charcoal-400">No messages yet</p>
+              {% endif %}
+            </div>
+            {% if item.unread_count %}
+              <span class="badge-ember tabular-nums">{{ item.unread_count }}</span>
+              <span class="sr-only">{{ item.unread_count }} unread</span>
+            {% endif %}
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    {{ empty_state('No conversations yet. Message a cohort member.',
+        'Find someone in the member directory and start a private conversation.',
+        'Browse members', '/members') }}
+  {% endif %}
+</div>
+{% endblock %}

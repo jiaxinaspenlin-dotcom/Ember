@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import empty_state, page_header %}
+{% block title %}Search · Ember{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
+  {{ page_header('Search', 'Everything you are allowed to see — and nothing you are not.') }}
+
+  <form method="get" action="/search" class="card-pad grid gap-4 sm:grid-cols-4" role="search">
+    <div class="sm:col-span-4">
+      <label class="label" for="search-q">Keywords</label>
+      <input class="input" id="search-q" name="q" type="search" value="{{ query }}" required
+             placeholder="Search messages, decisions, help requests and announcements" autofocus />
+    </div>
+    <div>
+      <label class="label" for="search-scope">Type</label>
+      <select class="input" id="search-scope" name="scope">
+        <option value="all" {% if scope.value == 'all' %}selected{% endif %}>Everything</option>
+        <option value="messages" {% if scope.value == 'messages' %}selected{% endif %}>Messages</option>
+        <option value="help_requests" {% if scope.value == 'help_requests' %}selected{% endif %}>Help requests</option>
+        <option value="decisions" {% if scope.value == 'decisions' %}selected{% endif %}>Decisions</option>
+        <option value="announcements" {% if scope.value == 'announcements' %}selected{% endif %}>Announcements</option>
+      </select>
+    </div>
+    <div>
+      <label class="label" for="search-channel">Channel</label>
+      <select class="input" id="search-channel" name="channel_id">
+        <option value="">Any channel</option>
+        {% for channel in all_channels %}
+          <option value="{{ channel.id }}"
+                  {% if selected_channel and selected_channel|string == channel.id|string %}selected{% endif %}>
+            #{{ channel.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="label" for="search-sender">Sender</label>
+      <select class="input" id="search-sender" name="sender_id">
+        <option value="">Anyone</option>
+        {% for member in all_members %}
+          <option value="{{ member.id }}"
+                  {% if selected_sender and selected_sender|string == member.id|string %}selected{% endif %}>
+            {{ member.display_name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="label" for="search-from">From</label>
+        <input class="input" id="search-from" name="date_from" type="date" value="{{ date_from }}" />
+      </div>
+      <div>
+        <label class="label" for="search-to">To</label>
+        <input class="input" id="search-to" name="date_to" type="date" value="{{ date_to }}" />
+      </div>
+    </div>
+    <div class="flex items-end gap-2 sm:col-span-4">
+      <button type="submit" class="btn-primary btn-sm">Search</button>
+      <a href="/search" class="btn-ghost btn-sm">Reset</a>
+    </div>
+  </form>
+
+  <div class="mt-6">
+    {% if response is none %}
+      {{ empty_state('Search your cohort',
+          'Find a past message, a decision that was made, or an open help request.') }}
+    {% elif response.results %}
+      <p class="mb-3 text-sm text-charcoal-500">
+        {{ response.total }} {{ 'result' if response.total == 1 else 'results' }} for “{{ query }}”
+      </p>
+      <ul role="list" class="space-y-3">
+        {% for result in response.results %}
+          <li class="card p-4">
+            <a href="{{ result.link_path }}" class="block hover:opacity-90">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="badge-neutral">{{ result.kind | replace('_', ' ') | title }}</span>
+                <span class="text-xs text-charcoal-500">{{ result.source_label }}</span>
+                <time class="ml-auto text-xs text-charcoal-400" datetime="{{ result.created_at | iso_time }}">
+                  {{ result.created_at | relative_time }}
+                </time>
+              </div>
+              <p class="mt-2 text-sm font-medium text-charcoal-950">{{ result.title }}</p>
+              <p class="mt-1 text-sm text-charcoal-600">{{ result.excerpt }}</p>
+              {% if result.author_name and result.kind != 'message' %}
+                <p class="mt-1.5 text-xs text-charcoal-500">{{ result.author_name }}</p>
+              {% endif %}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+
+      {% if response.has_more or offset > 0 %}
+        <nav class="mt-6 flex items-center justify-between border-t border-charcoal-200 pt-4"
+             aria-label="Pagination">
+          <p class="text-sm text-charcoal-500">Showing {{ offset + 1 }}–{{ offset + response.results | length }}</p>
+          <div class="flex gap-2">
+            {% if offset > 0 %}
+              <a class="btn-secondary btn-sm"
+                 href="/search?q={{ query | urlencode }}&scope={{ scope.value }}&offset={{ [offset - 25, 0] | max }}">Previous</a>
+            {% endif %}
+            {% if response.has_more %}
+              <a class="btn-secondary btn-sm"
+                 href="/search?q={{ query | urlencode }}&scope={{ scope.value }}&offset={{ offset + 25 }}">Next</a>
+            {% endif %}
+          </div>
+        </nav>
+      {% endif %}
+    {% else %}
+      {{ empty_state('No results for “' ~ query ~ '”.',
+          'Try different keywords, or widen the filters.') }}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

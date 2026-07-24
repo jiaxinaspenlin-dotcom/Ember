@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import avatar, empty_state, stat_tile, status_badge, priority_badge %}
+{% block title %}Home · Ember{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
+  <header class="mb-7">
+    <h1 class="text-2xl font-semibold tracking-tight">
+      Welcome back, {{ current_user.display_name.split(' ')[0] }}
+    </h1>
+    <p class="mt-1 text-sm text-charcoal-500">{{ APP_TAGLINE }}</p>
+  </header>
+
+  {% if pulse %}{% include "components/campfire.html" %}{% endif %}
+
+  <section aria-label="Your summary" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    {{ stat_tile('Unread messages', summary.unread_messages, '/channels', 'ember' if summary.unread_messages else 'neutral') }}
+    {{ stat_tile('Open help requests', summary.open_help_requests, '/help') }}
+    {{ stat_tile('Tasks assigned to you', summary.my_open_tasks, '/tasks?assigned_to_me=true') }}
+    {{ stat_tile('Notifications', summary.unread_notifications, '/notifications') }}
+  </section>
+
+  {% if not summary.has_any_channel %}
+    <div class="mt-6 card-pad border-l-4 border-l-ember-500">
+      <h2 class="text-base font-semibold">Your workspace is empty</h2>
+      <p class="mt-1.5 text-sm text-charcoal-600">
+        Create the first channel so your cohort has somewhere to talk.
+      </p>
+      <a href="/channels" class="btn-primary mt-4">Create the first channel</a>
+    </div>
+  {% endif %}
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-3">
+    <div class="space-y-6 lg:col-span-2">
+
+      <section class="card" aria-labelledby="announcements-heading">
+        <div class="flex items-center justify-between border-b border-charcoal-200 px-5 py-3.5">
+          <h2 id="announcements-heading" class="text-sm font-semibold">Recent announcements</h2>
+          <a href="/announcements" class="text-xs font-medium text-ember-700 hover:text-ember-800">View all</a>
+        </div>
+        {% if summary.recent_announcements %}
+          <ul role="list" class="divide-y divide-charcoal-100">
+            {% for announcement in summary.recent_announcements %}
+              <li class="px-5 py-4">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="text-sm font-medium text-charcoal-950">{{ announcement.title }}</h3>
+                  {{ priority_badge(announcement.priority) }}
+                  {% if announcement.is_pinned %}<span class="badge-neutral">Pinned</span>{% endif %}
+                </div>
+                <p class="mt-1 line-clamp-2 text-sm text-charcoal-600">{{ announcement.body }}</p>
+                <p class="mt-1.5 text-xs text-charcoal-500">
+                  {{ announcement.author.display_name }} · {{ announcement.published_at | relative_time }}
+                </p>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="p-5">
+            {{ empty_state('No announcements yet.',
+               'Administrators post cohort-wide updates here.') }}
+          </div>
+        {% endif %}
+      </section>
+
+      <section class="card" aria-labelledby="help-heading">
+        <div class="flex items-center justify-between border-b border-charcoal-200 px-5 py-3.5">
+          <h2 id="help-heading" class="text-sm font-semibold">Open help requests</h2>
+          <a href="/help" class="text-xs font-medium text-ember-700 hover:text-ember-800">Help Queue</a>
+        </div>
+        {% if summary.open_help_queue %}
+          <ul role="list" class="divide-y divide-charcoal-100">
+            {% for item in summary.open_help_queue %}
+              <li class="px-5 py-3.5">
+                <a href="/help/{{ item.id }}" class="block hover:opacity-80">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-sm font-medium">{{ item.title }}</span>
+                    {{ priority_badge(item.urgency) }}
+                    <span class="badge-neutral">{{ item.category.label }}</span>
+                  </div>
+                  <p class="mt-1 text-xs text-charcoal-500">
+                    {{ item.requester.display_name }} · open for {{ item.created_at | duration_since }}
+                  </p>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="p-5">{{ empty_state('No help requests are open.',
+             'When someone needs help, it shows up here.') }}</div>
+        {% endif %}
+      </section>
+
+      <section class="card" aria-labelledby="decisions-heading">
+        <div class="flex items-center justify-between border-b border-charcoal-200 px-5 py-3.5">
+          <h2 id="decisions-heading" class="text-sm font-semibold">Recent decisions</h2>
+          <a href="/decisions" class="text-xs font-medium text-ember-700 hover:text-ember-800">Decision Log</a>
+        </div>
+        {% if summary.recent_decisions %}
+          <ul role="list" class="divide-y divide-charcoal-100">
+            {% for decision in summary.recent_decisions %}
+              <li class="px-5 py-3.5">
+                <a href="/decisions/{{ decision.id }}" class="block hover:opacity-80">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-sm font-medium">{{ decision.title }}</span>
+                    {{ status_badge(decision.status.value, decision.status.label) }}
+                  </div>
+                  <p class="mt-1 line-clamp-1 text-xs text-charcoal-500">{{ decision.decision_text }}</p>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="p-5">{{ empty_state('No decisions have been recorded.',
+             'Turn an important message into a decision to start the log.') }}</div>
+        {% endif %}
+      </section>
+    </div>
+
+    <div class="space-y-6">
+      <section class="card" aria-labelledby="tasks-heading">
+        <div class="flex items-center justify-between border-b border-charcoal-200 px-5 py-3.5">
+          <h2 id="tasks-heading" class="text-sm font-semibold">Your tasks</h2>
+          <a href="/tasks?assigned_to_me=true" class="text-xs font-medium text-ember-700">All</a>
+        </div>
+        {% if summary.my_tasks %}
+          <ul role="list" class="divide-y divide-charcoal-100">
+            {% for task in summary.my_tasks %}
+              <li class="px-5 py-3">
+                <a href="/tasks/{{ task.id }}" class="block hover:opacity-80">
+                  <span class="text-sm font-medium">{{ task.title }}</span>
+                  <div class="mt-1 flex flex-wrap items-center gap-1.5">
+                    {{ status_badge(task.status.value, task.status.label) }}
+                    {{ priority_badge(task.priority) }}
+                    {% if task.due_at %}
+                      <span class="text-xs text-charcoal-500">due {{ task.due_at | relative_time }}</span>
+                    {% endif %}
+                  </div>
+                </a>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="p-5">{{ empty_state('No tasks are assigned to you.') }}</div>
+        {% endif %}
+      </section>
+
+      <section class="card" aria-labelledby="helpers-heading">
+        <div class="border-b border-charcoal-200 px-5 py-3.5">
+          <h2 id="helpers-heading" class="text-sm font-semibold">Available to help</h2>
+        </div>
+        {% if summary.available_helpers %}
+          <ul role="list" class="divide-y divide-charcoal-100">
+            {% for membership in summary.available_helpers %}
+              {% set member = membership.user %}
+              {% set profile = membership %}
+              <li class="flex items-center gap-3 px-5 py-3">
+                {{ avatar(member, 8) }}
+                <div class="min-w-0 flex-1">
+                  <a href="/members/{{ member.id }}" class="block truncate text-sm font-medium hover:text-ember-700">
+                    {{ member.display_name }}
+                  </a>
+                  {% if profile.skill_names %}
+                    <p class="truncate text-xs text-charcoal-500">{{ profile.skill_names | join(', ') }}</p>
+                  {% endif %}
+                </div>
+                <form method="post" action="/dm/start">
+                  <input type="hidden" name="user_id" value="{{ member.id }}" />
+                  <button type="submit" class="btn-ghost btn-sm">Message</button>
+                </form>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="p-5">{{ empty_state('Nobody is marked as available right now.',
+             'Set your own status to “Available to help” from your profile.') }}</div>
+        {% endif %}
+      </section>
+
+      <section class="card" aria-labelledby="mentions-heading">
+        <div class="border-b border-charcoal-200 px-5 py-3.5">
+          <h2 id="mentions-heading" class="text-sm font-semibold">Recent mentions</h2>
+        </div>
+        {% if summary.recent_mentions %}
+          <ul role="list" class="divide-y divide-charcoal-100">
+            {% for message in summary.recent_mentions %}
+              <li class="px-5 py-3">
+                <p class="text-xs font-medium text-charcoal-700">{{ message.sender.display_name }}</p>
+                <p class="mt-0.5 line-clamp-2 text-sm text-charcoal-600">{{ message.body }}</p>
+                <p class="mt-1 text-xs text-charcoal-400">{{ message.created_at | relative_time }}</p>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <div class="p-5">{{ empty_state('No mentions yet.') }}</div>
+        {% endif %}
+      </section>
+    </div>
+  </div>
+</div>
+{% endblock %}

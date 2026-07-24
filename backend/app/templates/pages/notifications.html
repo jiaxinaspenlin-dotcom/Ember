@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import avatar, empty_state, page_header %}
+{% block title %}Notifications · Ember{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+  {{ page_header('Notifications', 'Mentions, replies, assignments and announcements meant for you.') }}
+
+  <div class="mb-5 flex flex-wrap items-center gap-2">
+    <a href="/notifications" class="btn-sm {{ 'btn-primary' if not unread_only else 'btn-secondary' }}">All</a>
+    <a href="/notifications?unread_only=true"
+       class="btn-sm {{ 'btn-primary' if unread_only else 'btn-secondary' }}">Unread</a>
+    {% if notifications %}
+      <form method="post" action="/notifications/read-all" class="ml-auto">
+        <button type="submit" class="btn-ghost btn-sm">Mark all as read</button>
+      </form>
+    {% endif %}
+  </div>
+
+  {% if notifications %}
+    <ul role="list" class="card divide-y divide-charcoal-100">
+      {% for notification in notifications %}
+        <li class="{% if not notification.read_at %}bg-ember-50/40{% endif %}">
+          <div class="flex items-start gap-3 px-5 py-4">
+            {% if notification.actor %}
+              {{ avatar(notification.actor, 9) }}
+            {% else %}
+              <span class="flex h-9 w-9 items-center justify-center rounded-full bg-sand-200 text-xs"
+                    aria-hidden="true">•</span>
+            {% endif %}
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-medium text-charcoal-950">{{ notification.title }}</p>
+              {% if notification.body %}
+                <p class="mt-0.5 line-clamp-2 text-sm text-charcoal-600">{{ notification.body }}</p>
+              {% endif %}
+              <p class="mt-1 text-xs text-charcoal-500">
+                {{ notification.created_at | relative_time }}
+                {% if not notification.read_at %}
+                  · <span class="font-medium text-ember-700">Unread</span>
+                {% endif %}
+              </p>
+            </div>
+            <form method="post" action="/notifications/{{ notification.id }}/read" class="shrink-0">
+              <button type="submit" class="btn-secondary btn-sm">Open</button>
+            </form>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+
+    {% if total > 50 %}
+      <nav class="mt-6 flex items-center justify-between border-t border-charcoal-200 pt-4"
+           aria-label="Pagination">
+        <p class="text-sm text-charcoal-500">Showing {{ offset + 1 }}–{{ offset + notifications | length }} of {{ total }}</p>
+        <div class="flex gap-2">
+          {% if offset > 0 %}
+            <a class="btn-secondary btn-sm" href="/notifications?offset={{ [offset - 50, 0] | max }}">Previous</a>
+          {% endif %}
+          {% if offset + 50 < total %}
+            <a class="btn-secondary btn-sm" href="/notifications?offset={{ offset + 50 }}">Next</a>
+          {% endif %}
+        </div>
+      </nav>
+    {% endif %}
+  {% else %}
+    {{ empty_state("You're all caught up.",
+        'Mentions, thread replies and assignments will appear here.') }}
+  {% endif %}
+</div>
+{% endblock %}

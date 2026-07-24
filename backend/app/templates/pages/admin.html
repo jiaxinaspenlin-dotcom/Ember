@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import avatar, empty_state, page_header, stat_tile %}
+{% block title %}Admin · Ember{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
+  {{ page_header(cohort.name, 'Manage this cohort: members, roles, channels and its invite link.') }}
+
+  <section aria-label="Cohort statistics" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    {{ stat_tile('Members', stats.members) }}
+    {{ stat_tile('Administrators', stats.admins) }}
+    {{ stat_tile('Active channels', stats.channels) }}
+    {{ stat_tile('Archived channels', stats.archived_channels) }}
+    {{ stat_tile('Messages', stats.messages) }}
+    {{ stat_tile('Help requests', stats.help_requests) }}
+    {{ stat_tile('Decisions', stats.decisions) }}
+    {{ stat_tile('Tasks', stats.tasks) }}
+  </section>
+
+  <section class="card mt-6" id="invite" aria-labelledby="admin-invite-heading">
+    <div class="border-b border-charcoal-200 px-5 py-3.5">
+      <h2 id="admin-invite-heading" class="text-sm font-semibold">Invite link</h2>
+    </div>
+    <div class="space-y-3 p-5">
+      <p class="text-xs text-charcoal-500">
+        {% if open_join %}
+          This cohort is discoverable — anyone signed in can find and join it while
+          open-join is on. Share this link to point people straight here.
+        {% else %}
+          People can join this cohort only with an invite link. Share the link below.
+        {% endif %}
+      </p>
+      {% if cohort_invite_url %}
+        <div class="flex flex-wrap items-center gap-2">
+          <input class="input flex-1 font-mono text-xs" value="{{ cohort_invite_url }}" readonly
+                 onclick="this.select()" aria-label="Cohort invite link" />
+          <form method="post" action="/cohort/invite-link">
+            <button type="submit" class="btn-secondary btn-sm">Rotate</button>
+          </form>
+          <form method="post" action="/cohort/invite-link/revoke">
+            <button type="submit" class="btn-ghost btn-sm">Turn off</button>
+          </form>
+        </div>
+      {% else %}
+        <form method="post" action="/cohort/invite-link">
+          <button type="submit" class="btn-primary btn-sm">Create an invite link</button>
+        </form>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="card mt-6" aria-labelledby="admin-members-heading">
+    <div class="border-b border-charcoal-200 px-5 py-3.5">
+      <h2 id="admin-members-heading" class="text-sm font-semibold">Members and roles</h2>
+    </div>
+    {% if members %}
+      <ul role="list" class="divide-y divide-charcoal-100">
+        {% for m in members %}
+          {% set user = m.user %}
+          <li class="flex items-center gap-3 px-5 py-3">
+            {{ avatar(user, 9) }}
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-sm font-medium">{{ user.display_name }}</p>
+              <p class="text-xs text-charcoal-500">
+                Joined {{ m.joined_at | relative_time }}
+                {% if not user.is_active %} · deactivated{% endif %}
+              </p>
+            </div>
+            <form method="post" action="/admin/users/{{ user.id }}/role" class="flex items-center gap-2">
+              <label class="sr-only" for="role-{{ user.id }}">Role for {{ user.display_name }}</label>
+              <select class="input w-32 py-1.5 text-xs" id="role-{{ user.id }}" name="role">
+                <option value="member" {% if m.role.value == 'member' %}selected{% endif %}>Member</option>
+                <option value="admin" {% if m.role.value == 'admin' %}selected{% endif %}>Admin</option>
+              </select>
+              <button type="submit" class="btn-secondary btn-sm">Save</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="p-5">{{ empty_state('No members have joined yet.') }}</div>
+    {% endif %}
+  </section>
+
+  <section class="card mt-6" aria-labelledby="admin-channels-heading">
+    <div class="flex items-center justify-between border-b border-charcoal-200 px-5 py-3.5">
+      <h2 id="admin-channels-heading" class="text-sm font-semibold">Channels</h2>
+      <a href="/channels" class="text-xs font-medium text-ember-700">Create a channel</a>
+    </div>
+    {% if channel_items %}
+      <ul role="list" class="divide-y divide-charcoal-100">
+        {% for item in channel_items %}
+          <li class="flex items-center gap-3 px-5 py-3">
+            <div class="min-w-0 flex-1">
+              <a href="/channels/{{ item.channel.slug }}" class="text-sm font-medium hover:text-ember-700">
+                #{{ item.channel.name }}
+              </a>
+              {% if item.channel.is_archived %}<span class="badge-neutral ml-2">Archived</span>{% endif %}
+            </div>
+            <form method="post"
+                  action="/channels/{{ item.channel.slug }}/{{ 'restore' if item.channel.is_archived else 'archive' }}">
+              <button type="submit" class="btn-secondary btn-sm">
+                {{ 'Restore' if item.channel.is_archived else 'Archive' }}
+              </button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="p-5">
+        {{ empty_state('No channels yet.', 'Create the first channel.', 'Create a channel', '/channels') }}
+      </div>
+    {% endif %}
+  </section>
+
+  <section class="card mt-6" aria-labelledby="admin-audit-heading">
+    <div class="border-b border-charcoal-200 px-5 py-3.5">
+      <h2 id="admin-audit-heading" class="text-sm font-semibold">Recent activity</h2>
+    </div>
+    {% if audit_events %}
+      <ul role="list" class="divide-y divide-charcoal-100">
+        {% for event in audit_events %}
+          <li class="flex items-center gap-3 px-5 py-2.5 text-xs">
+            <code class="rounded bg-sand-100 px-1.5 py-0.5 text-charcoal-700">{{ event.action.value }}</code>
+            <span class="text-charcoal-500">{{ event.entity_type or '—' }}</span>
+            <time class="ml-auto text-charcoal-400" datetime="{{ event.created_at | iso_time }}">
+              {{ event.created_at | relative_time }}
+            </time>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="p-5">{{ empty_state('No activity recorded yet.') }}</div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

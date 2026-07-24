@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import avatar, priority_badge, status_badge %}
+{% set help_request = view.help_request %}
+{% block title %}{{ help_request.title }} · Help Queue{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6">
+  <a href="/help" class="text-sm font-medium text-ember-700 hover:text-ember-800">← Help Queue</a>
+
+  <header class="mb-6 mt-3">
+    <h1 class="text-2xl font-semibold tracking-tight">{{ help_request.title }}</h1>
+    <div class="mt-2 flex flex-wrap items-center gap-2">
+      {{ status_badge(help_request.status.value, help_request.status.label) }}
+      {{ priority_badge(help_request.urgency) }}
+      <span class="badge-neutral">{{ help_request.category.label }}</span>
+    </div>
+  </header>
+
+  <section class="card-pad">
+    <div class="flex items-center gap-3">
+      {{ avatar(help_request.requester, 9) }}
+      <div>
+        <p class="text-sm font-medium">{{ help_request.requester.display_name }}</p>
+        <p class="text-xs text-charcoal-500">
+          Asked {{ help_request.created_at | relative_time }} · open for {{ help_request.created_at | duration_since }}
+        </p>
+      </div>
+    </div>
+    <div class="prose-message mt-4 whitespace-pre-line">{{ help_request.description }}</div>
+
+    {% if help_request.source_channel %}
+      <p class="mt-4 text-xs text-charcoal-500">
+        From
+        <a href="/channels/{{ help_request.source_channel.slug }}{% if source_message %}#message-{{ source_message.id }}{% endif %}"
+           class="text-ember-700 hover:text-ember-800">#{{ help_request.source_channel.name }}</a>
+        {% if source_message %}· <a href="/threads/{{ source_message.id }}" class="text-ember-700">open original message</a>{% endif %}
+      </p>
+    {% endif %}
+  </section>
+
+  {% if help_request.assigned_helper %}
+    <section class="card-pad mt-4">
+      <h2 class="text-sm font-semibold">Helper</h2>
+      <div class="mt-3 flex items-center gap-3">
+        {{ avatar(help_request.assigned_helper, 8) }}
+        <div>
+          <p class="text-sm font-medium">{{ help_request.assigned_helper.display_name }}</p>
+          <p class="text-xs text-charcoal-500">Claimed {{ help_request.claimed_at | relative_time }}</p>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
+  {% if help_request.resolution_note %}
+    <section class="card-pad mt-4 border-l-4 border-l-emerald-500">
+      <h2 class="text-sm font-semibold">Resolution</h2>
+      <p class="mt-2 whitespace-pre-line text-sm text-charcoal-700">{{ help_request.resolution_note }}</p>
+      <p class="mt-2 text-xs text-charcoal-500">Resolved {{ help_request.resolved_at | relative_time }}</p>
+    </section>
+  {% endif %}
+
+  <section class="mt-6 flex flex-wrap gap-2" aria-label="Available actions">
+    {% if view.can_claim %}
+      <form method="post" action="/help/{{ help_request.id }}/claim">
+        <button type="submit" class="btn-primary">Claim this request</button>
+      </form>
+    {% endif %}
+    {% if view.can_unclaim %}
+      <form method="post" action="/help/{{ help_request.id }}/unclaim">
+        <button type="submit" class="btn-secondary">Release</button>
+      </form>
+    {% endif %}
+    {% if view.can_cancel %}
+      <form method="post" action="/help/{{ help_request.id }}/cancel">
+        <button type="submit" class="btn-danger">Cancel request</button>
+      </form>
+    {% endif %}
+    {% if view.can_reopen %}
+      <form method="post" action="/help/{{ help_request.id }}/reopen">
+        <button type="submit" class="btn-secondary">Reopen</button>
+      </form>
+    {% endif %}
+  </section>
+
+  {% if view.can_resolve %}
+    <section class="card-pad mt-4" aria-labelledby="resolve-heading">
+      <h2 id="resolve-heading" class="text-sm font-semibold">Resolve this request</h2>
+      <form method="post" action="/help/{{ help_request.id }}/resolve" class="mt-3 space-y-3">
+        <div>
+          <label class="label" for="resolution-note">What resolved it? <span class="text-charcoal-400">(optional)</span></label>
+          <textarea class="input" id="resolution-note" name="resolution_note" rows="3"
+                    placeholder="Leave a note so the next person can find the answer."></textarea>
+        </div>
+        <button type="submit" class="btn-primary">Mark resolved</button>
+      </form>
+    </section>
+  {% endif %}
+</div>
+{% endblock %}

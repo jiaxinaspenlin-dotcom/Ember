@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import empty_state, page_header %}
+{% block title %}Tasks · Ember{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
+  {{ page_header('Tasks', 'Work with a clear owner and a clear next step.') }}
+
+  <details class="card-pad">
+    <summary class="cursor-pointer text-sm font-semibold">Create a task</summary>
+    <form method="post" action="/tasks" class="mt-4 space-y-4">
+      <div>
+        <label class="label" for="new-task-title">Title</label>
+        <input class="input" id="new-task-title" name="title" required minlength="3" maxlength="160"
+               placeholder="e.g. Write the onboarding email" />
+      </div>
+      <div>
+        <label class="label" for="new-task-description">Description <span class="text-charcoal-400">(optional)</span></label>
+        <textarea class="input" id="new-task-description" name="description" rows="3"></textarea>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-3">
+        <div>
+          <label class="label" for="new-task-assignee">Assignee</label>
+          <select class="input" id="new-task-assignee" name="assignee_id">
+            <option value="">Unassigned</option>
+            {% for member in all_members %}
+              <option value="{{ member.id }}">{{ member.display_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="label" for="new-task-priority">Priority</label>
+          <select class="input" id="new-task-priority" name="priority">
+            {% for priority in PRIORITIES %}
+              <option value="{{ priority.value }}" {% if priority.value == 'normal' %}selected{% endif %}>
+                {{ priority.label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="label" for="new-task-due">Due date</label>
+          <input class="input" id="new-task-due" name="due_at" type="date" />
+        </div>
+      </div>
+      <button type="submit" class="btn-primary">Create task</button>
+    </form>
+  </details>
+
+  <form method="get" action="/tasks" class="card-pad mt-6 grid gap-4 sm:grid-cols-4" role="search">
+    <div class="sm:col-span-2">
+      <label class="label" for="task-q">Search</label>
+      <input class="input" id="task-q" name="q" type="search" value="{{ query }}" placeholder="Search tasks" />
+    </div>
+    <div>
+      <label class="label" for="task-status">Status</label>
+      <select class="input" id="task-status" name="status">
+        <option value="">Any status</option>
+        {% for item in TASK_STATUSES %}
+          <option value="{{ item.value }}"
+                  {% if filters.status and filters.status.value == item.value %}selected{% endif %}>
+            {{ item.label }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="label" for="task-assignee-filter">Assignee</label>
+      <select class="input" id="task-assignee-filter" name="assignee_id">
+        <option value="">Anyone</option>
+        {% for member in all_members %}
+          <option value="{{ member.id }}"
+                  {% if filters.assignee_id and filters.assignee_id|string == member.id|string %}selected{% endif %}>
+            {{ member.display_name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="flex flex-wrap items-center gap-4 sm:col-span-3">
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="assigned_to_me" value="true"
+               {% if filters.assigned_to_me %}checked{% endif %} class="rounded border-charcoal-300" />
+        Assigned to me
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="created_by_me" value="true"
+               {% if filters.created_by_me %}checked{% endif %} class="rounded border-charcoal-300" />
+        Created by me
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="unassigned" value="true"
+               {% if filters.unassigned %}checked{% endif %} class="rounded border-charcoal-300" />
+        Unassigned
+      </label>
+    </div>
+    <div class="flex items-end gap-2">
+      <button type="submit" class="btn-primary btn-sm">Apply</button>
+      <a href="/tasks" class="btn-ghost btn-sm">Reset</a>
+    </div>
+  </form>
+
+  <div class="mt-6">
+    {% if views %}
+      <ul role="list" class="space-y-3">
+        {% for view in views %}
+          {% include "fragments/task_row.html" %}
+        {% endfor %}
+      </ul>
+
+      {% if total > page_size %}
+        <nav class="mt-6 flex items-center justify-between border-t border-charcoal-200 pt-4"
+             aria-label="Pagination">
+          <p class="text-sm text-charcoal-500">Showing {{ offset + 1 }}–{{ offset + views | length }} of {{ total }}</p>
+          <div class="flex gap-2">
+            {% if offset > 0 %}
+              <a class="btn-secondary btn-sm" href="/tasks?offset={{ [offset - page_size, 0] | max }}">Previous</a>
+            {% endif %}
+            {% if offset + page_size < total %}
+              <a class="btn-secondary btn-sm" href="/tasks?offset={{ offset + page_size }}">Next</a>
+            {% endif %}
+          </div>
+        </nav>
+      {% endif %}
+    {% elif filters.assigned_to_me %}
+      {{ empty_state('No tasks are assigned to you.', 'Tasks assigned to you will show up here.') }}
+    {% else %}
+      {{ empty_state('No tasks yet.', 'Create a task above, or turn a message into one.') }}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

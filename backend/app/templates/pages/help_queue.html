@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% from "components/macros.html" import avatar, empty_state, page_header, priority_badge, status_badge, stat_tile %}
+{% block title %}Help Queue · Ember{% endblock %}
+
+{% block content %}
+<div class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6">
+  {{ page_header('Help Queue', 'Ask for help, claim a request, and close the loop.') }}
+
+  <div class="grid gap-3 sm:grid-cols-3">
+    {{ stat_tile('Open', counts.open, '/help?status=open', 'ember' if counts.open else 'neutral') }}
+    {{ stat_tile('Claimed', counts.claimed, '/help?status=claimed') }}
+    {{ stat_tile('Resolved', counts.resolved, '/help?status=resolved') }}
+  </div>
+
+  <details class="card-pad mt-6" {% if not views %}open{% endif %}>
+    <summary class="cursor-pointer text-sm font-semibold">Ask for help</summary>
+    <form method="post" action="/help" class="mt-4 space-y-4">
+      <div>
+        <label class="label" for="new-help-title">What do you need help with?</label>
+        <input class="input" id="new-help-title" name="title" required minlength="4" maxlength="160"
+               placeholder="e.g. Deploy failing on the staging environment" />
+      </div>
+      <div>
+        <label class="label" for="new-help-description">Details</label>
+        <textarea class="input" id="new-help-description" name="description" rows="4" required
+                  placeholder="What have you tried? What are you seeing?"></textarea>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="label" for="new-help-category">Category</label>
+          <select class="input" id="new-help-category" name="category">
+            {% for category in HELP_CATEGORIES %}
+              <option value="{{ category.value }}">{{ category.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="label" for="new-help-urgency">Urgency</label>
+          <select class="input" id="new-help-urgency" name="urgency">
+            {% for priority in PRIORITIES %}
+              <option value="{{ priority.value }}" {% if priority.value == 'normal' %}selected{% endif %}>
+                {{ priority.label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <button type="submit" class="btn-primary">Post help request</button>
+    </form>
+  </details>
+
+  <form method="get" action="/help" class="card-pad mt-6 grid gap-4 sm:grid-cols-4" role="search">
+    <div class="sm:col-span-2">
+      <label class="label" for="help-q">Search</label>
+      <input class="input" id="help-q" name="q" type="search" value="{{ query }}"
+             placeholder="Search titles and details" />
+    </div>
+    <div>
+      <label class="label" for="help-status">Status</label>
+      <select class="input" id="help-status" name="status">
+        <option value="">Any status</option>
+        {% for item in HELP_STATUSES %}
+          <option value="{{ item.value }}"
+                  {% if filters.status and filters.status.value == item.value %}selected{% endif %}>
+            {{ item.label }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="label" for="help-category">Category</label>
+      <select class="input" id="help-category" name="category">
+        <option value="">Any category</option>
+        {% for item in HELP_CATEGORIES %}
+          <option value="{{ item.value }}"
+                  {% if filters.category and filters.category.value == item.value %}selected{% endif %}>
+            {{ item.label }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="flex flex-wrap items-center gap-4 sm:col-span-3">
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="assigned_to_me" value="true"
+               {% if filters.assigned_to_me %}checked{% endif %} class="rounded border-charcoal-300" />
+        Assigned to me
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="created_by_me" value="true"
+               {% if filters.created_by_me %}checked{% endif %} class="rounded border-charcoal-300" />
+        Created by me
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" name="unclaimed" value="true"
+               {% if filters.unclaimed %}checked{% endif %} class="rounded border-charcoal-300" />
+        Unclaimed
+      </label>
+    </div>
+    <div class="flex items-end gap-2">
+      <button type="submit" class="btn-primary btn-sm">Apply</button>
+      <a href="/help" class="btn-ghost btn-sm">Reset</a>
+    </div>
+  </form>
+
+  <div class="mt-6">
+    {% if views %}
+      <ul role="list" class="space-y-3">
+        {% for item in views %}
+          {% set help_request = item.help_request %}
+          <li class="card p-4">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+              <div class="min-w-0">
+                <a href="/help/{{ help_request.id }}"
+                   class="text-sm font-semibold text-charcoal-950 hover:text-ember-700">
+                  {{ help_request.title }}
+                </a>
+                <p class="mt-1 line-clamp-2 text-sm text-charcoal-600">{{ help_request.description }}</p>
+                <div class="mt-2 flex flex-wrap items-center gap-2">
+                  {{ status_badge(help_request.status.value, help_request.status.label) }}
+                  {{ priority_badge(help_request.urgency) }}
+                  <span class="badge-neutral">{{ help_request.category.label }}</span>
+                  {% if help_request.source_channel %}
+                    <a href="/channels/{{ help_request.source_channel.slug }}"
+                       class="text-xs text-charcoal-500 hover:text-ember-700">
+                      from #{{ help_request.source_channel.name }}
+                    </a>
+                  {% endif %}
+                </div>
+                <p class="mt-2 text-xs text-charcoal-500">
+                  {{ help_request.requester.display_name }} · open for {{ help_request.created_at | duration_since }}
+                  {% if help_request.assigned_helper %}
+                    · helped by {{ help_request.assigned_helper.display_name }}
+                  {% endif %}
+                </p>
+              </div>
+              <div class="flex shrink-0 flex-wrap gap-2">
+                {% if item.can_claim %}
+                  <form method="post" action="/help/{{ help_request.id }}/claim">
+                    <button type="submit" class="btn-primary btn-sm">Claim</button>
+                  </form>
+                {% endif %}
+                {% if item.can_unclaim %}
+                  <form method="post" action="/help/{{ help_request.id }}/unclaim">
+                    <button type="submit" class="btn-secondary btn-sm">Release</button>
+                  </form>
+                {% endif %}
+                {% if item.can_resolve %}
+                  <form method="post" action="/help/{{ help_request.id }}/resolve">
+                    <button type="submit" class="btn-secondary btn-sm">Resolve</button>
+                  </form>
+                {% endif %}
+                {% if item.can_reopen %}
+                  <form method="post" action="/help/{{ help_request.id }}/reopen">
+                    <button type="submit" class="btn-secondary btn-sm">Reopen</button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+
+      {% if total > page_size %}
+        <nav class="mt-6 flex items-center justify-between border-t border-charcoal-200 pt-4"
+             aria-label="Pagination">
+          <p class="text-sm text-charcoal-500">Showing {{ offset + 1 }}–{{ offset + views | length }} of {{ total }}</p>
+          <div class="flex gap-2">
+            {% if offset > 0 %}
+              <a class="btn-secondary btn-sm" href="/help?offset={{ [offset - page_size, 0] | max }}">Previous</a>
+            {% endif %}
+            {% if offset + page_size < total %}
+              <a class="btn-secondary btn-sm" href="/help?offset={{ offset + page_size }}">Next</a>
+            {% endif %}
+          </div>
+        </nav>
+      {% endif %}
+    {% else %}
+      {{ empty_state('No help requests are open.',
+          'When someone asks for help, it appears here so the cohort can jump in.') }}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

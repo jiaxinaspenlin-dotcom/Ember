@@ -1,0 +1,25 @@
+{# Reaction chips. Counts and "did I react" come from the server. #}
+{% if view.reactions %}
+  <ul class="mt-1.5 flex flex-wrap gap-1.5" role="list">
+    {% for reaction in view.reactions %}
+      <li>
+        <form hx-post="/hx/messages/{{ view.message.id }}/react"
+              hx-target="#reactions-{{ view.message.id }}" hx-swap="innerHTML">
+          <input type="hidden" name="reaction_type" value="{{ reaction.reaction_type.value }}" />
+          <button type="submit"
+                  class="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition-colors
+                         {% if reaction.reacted %}border-ember-300 bg-ember-100 text-ember-900
+                         {% else %}border-charcoal-200 bg-white text-charcoal-700 hover:bg-sand-100{% endif %}"
+                  aria-pressed="{{ 'true' if reaction.reacted else 'false' }}"
+                  title="{{ reaction.participants | join(', ') }}">
+            <span aria-hidden="true">{{ reaction.reaction_type.emoji }}</span>
+            <span class="tabular-nums">{{ reaction.count }}</span>
+            <span class="sr-only">
+              {{ reaction.reaction_type.label }}, {{ reaction.count }}: {{ reaction.participants | join(', ') }}
+            </span>
+          </button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}

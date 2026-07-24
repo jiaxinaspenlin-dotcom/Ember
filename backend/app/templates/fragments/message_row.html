@@ -1,0 +1,86 @@
+{% from "components/macros.html" import avatar %}
+{# One message. Every control shown here was authorised in Python. #}
+<article id="message-{{ view.message.id }}"
+         class="group relative flex gap-3 px-4 py-2.5 hover:bg-sand-50 sm:px-6">
+  {{ avatar(view.message.sender, 9) }}
+
+  <div class="min-w-0 flex-1">
+    <div class="flex flex-wrap items-baseline gap-x-2">
+      <span class="text-sm font-semibold text-charcoal-950">
+        {{ view.message.sender.display_name }}
+      </span>
+      <time class="text-xs text-charcoal-500" datetime="{{ view.message.created_at | iso_time }}"
+            title="{{ view.message.created_at | absolute_time }}">
+        {{ view.message.created_at | relative_time }}
+      </time>
+      {% if view.message.edited_at %}
+        <span class="text-xs text-charcoal-400">(edited)</span>
+      {% endif %}
+      {% if view.message.is_pinned %}
+        <span class="badge-ember">Pinned</span>
+      {% endif %}
+    </div>
+
+    <div id="message-body-{{ view.message.id }}" class="prose-message mt-0.5">
+      {% if view.message.deleted_at %}
+        <p class="italic text-charcoal-400">This message was deleted.</p>
+      {% else %}
+        {{ view.message.body | render_body }}
+      {% endif %}
+    </div>
+
+    <div id="reactions-{{ view.message.id }}">
+      {% include "fragments/reaction_bar.html" %}
+    </div>
+
+    {% if view.message.reply_count %}
+      <a href="/threads/{{ view.message.id }}"
+         class="mt-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-ember-700 hover:text-ember-800">
+        {{ view.message.reply_count | pluralize('reply', 'replies') }}
+        <span class="text-charcoal-400">· last {{ view.message.last_reply_at | relative_time }}</span>
+      </a>
+    {% endif %}
+  </div>
+
+  {% if not view.message.deleted_at %}
+    <div class="absolute right-4 top-1.5 hidden items-center gap-0.5 rounded-lg border border-charcoal-200
+                bg-white p-0.5 shadow-card group-hover:flex group-focus-within:flex sm:right-6">
+      {% for reaction in REACTION_TYPES[:3] %}
+        <form hx-post="/hx/messages/{{ view.message.id }}/react"
+              hx-target="#reactions-{{ view.message.id }}" hx-swap="innerHTML">
+          <input type="hidden" name="reaction_type" value="{{ reaction.value }}" />
+          <button type="submit" class="btn-ghost btn-sm" title="React: {{ reaction.label }}"
+                  aria-label="React with {{ reaction.label }}">{{ reaction.emoji }}</button>
+        </form>
+      {% endfor %}
+
+      <a href="/threads/{{ view.message.id }}" class="btn-ghost btn-sm" title="Open thread">Thread</a>
+
+      {% if view.can_convert %}
+        <a href="/messages/{{ view.message.id }}/actions" class="btn-ghost btn-sm"
+           title="Turn this message into an action">Turn into…</a>
+      {% endif %}
+
+      {% if view.can_pin %}
+        <button type="button" class="btn-ghost btn-sm"
+                hx-post="/hx/messages/{{ view.message.id }}/pin"
+                hx-target="#message-{{ view.message.id }}" hx-swap="outerHTML">
+          {{ 'Unpin' if view.message.is_pinned else 'Pin' }}
+        </button>
+      {% endif %}
+
+      {% if view.can_edit %}
+        <button type="button" class="btn-ghost btn-sm"
+                hx-get="/hx/messages/{{ view.message.id }}/edit"
+                hx-target="#message-body-{{ view.message.id }}" hx-swap="innerHTML">Edit</button>
+      {% endif %}
+
+      {% if view.can_delete %}
+        <button type="button" class="btn-ghost btn-sm text-red-700"
+                hx-post="/hx/messages/{{ view.message.id }}/delete"
+                hx-confirm="Delete this message? The record is kept for the audit log."
+                hx-target="#message-{{ view.message.id }}" hx-swap="outerHTML">Delete</button>
+      {% endif %}
+    </div>
+  {% endif %}
+</article>
