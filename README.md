@@ -39,18 +39,24 @@ real owners** — and lets any public message become one of them in two clicks.
 ## What Ember does
 
 A cohort talks in public channels and direct messages. Ember keeps that
-conversation, and adds the follow-through:
+conversation, and adds the follow-through — **with one click, by a person**.
 
-| Someone says… | Ember turns it into… |
+Every channel message has a **“Turn into…”** action (in the message's hover
+toolbar). You click it on the message that matters and choose what it becomes:
+
+| You click "Turn into…" on… | …and choose to create |
 | --- | --- |
 | "I'm blocked on the deploy" | a **help request** someone can claim and resolve |
-| "OK, we're going with Postgres" | a **decision** in a searchable log, with context |
+| "OK, we're going with Postgres" | a **decision** in a searchable log, linked back to the message |
 | "Can you write the onboarding email?" | a **task** with an assignee, priority and due date |
 | "Here's the handbook link" | a **pinned resource** at the top of the channel |
 | "Would love feedback on this" | a **feedback request** in the Help Queue |
 
-Every one of those is a real, persisted record with its own permissions, state
-machine and audit trail.
+So the conversion is deliberate and human-initiated — Ember provides the
+one-click bridge, not automatic magic. (Conversion is available on **channel**
+messages only, not direct messages.) Once created, each item is a real,
+persisted record with its own permissions, state machine and audit trail, and
+the decision/help/task keeps a link back to the source message as its context.
 
 ## Who it is for
 
