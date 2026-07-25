@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "components/macros.html" import avatar, priority_badge, status_badge %}
+{% from "components/macros.html" import avatar, forth_link, priority_badge, status_badge %}
 {% set help_request = view.help_request %}
 {% block title %}{{ help_request.title }} · Help Queue{% endblock %}
 
@@ -14,6 +14,9 @@
       {{ priority_badge(help_request.urgency) }}
       <span class="badge-neutral">{{ help_request.category.label }}</span>
     </div>
+    {% if help_request.forth_url %}
+      <div class="mt-2">{{ forth_link(help_request.forth_url) }}</div>
+    {% endif %}
   </header>
 
   <section class="card-pad">

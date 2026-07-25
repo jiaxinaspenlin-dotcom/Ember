@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "components/macros.html" import avatar, priority_badge, status_badge %}
+{% from "components/macros.html" import avatar, forth_link, priority_badge, status_badge %}
 {% set task = view.task %}
 {% block title %}{{ task.title }} · Tasks{% endblock %}
 
@@ -16,6 +16,9 @@
         <span class="badge-neutral">Due {{ task.due_at | absolute_time }}</span>
       {% endif %}
     </div>
+    {% if task.forth_url %}
+      <div class="mt-2">{{ forth_link(task.forth_url) }}</div>
+    {% endif %}
   </header>
 
   <section class="card-pad">

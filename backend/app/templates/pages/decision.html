@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "components/macros.html" import avatar, status_badge %}
+{% from "components/macros.html" import avatar, forth_link, status_badge %}
 {% set decision = view.decision %}
 {% block title %}{{ decision.title }} · Decision Log{% endblock %}
 
@@ -15,6 +15,9 @@
         <span class="badge-neutral">{{ decision.related_project }}</span>
       {% endif %}
     </div>
+    {% if decision.forth_url %}
+      <div class="mt-2">{{ forth_link(decision.forth_url) }}</div>
+    {% endif %}
   </header>
 
   <section class="card-pad">

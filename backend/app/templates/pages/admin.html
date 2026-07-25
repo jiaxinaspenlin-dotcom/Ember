@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "components/macros.html" import avatar, empty_state, page_header, stat_tile %}
+{% from "components/macros.html" import avatar, empty_state, forth_button, page_header, stat_tile %}
 {% block title %}Admin · Ember{% endblock %}
 
 {% block content %}
@@ -44,6 +44,45 @@
       {% else %}
         <form method="post" action="/cohort/invite-link">
           <button type="submit" class="btn-primary btn-sm">Create an invite link</button>
+        </form>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="card mt-6" id="forth" aria-labelledby="admin-forth-heading">
+    <div class="border-b border-charcoal-200 px-5 py-3.5">
+      <h2 id="admin-forth-heading" class="text-sm font-semibold">Forth workspace</h2>
+    </div>
+    <div class="space-y-3 p-5">
+      <p class="text-xs text-charcoal-500">
+        Link this cohort to its <strong>Forth</strong> project-management workspace.
+        This is a link only — Ember and Forth keep separate accounts and data, and
+        Ember never reads your Forth tasks.
+      </p>
+      {% if request.query_params.get('forth_error') %}
+        <div class="error-state" role="alert">
+          <p>That link was rejected. It must use <code>https</code> and point to
+             <code>forth-bice.vercel.app</code>.</p>
+        </div>
+      {% endif %}
+      {% if cohort.forth_workspace_url %}
+        <div class="flex flex-wrap items-center gap-2">
+          {{ forth_button(cohort.forth_workspace_url) }}
+          <span class="min-w-0 flex-1 truncate font-mono text-xs text-charcoal-500">
+            {{ cohort.forth_workspace_url }}
+          </span>
+        </div>
+      {% endif %}
+      <form method="post" action="/cohort/forth-link" class="flex flex-wrap items-center gap-2">
+        <input class="input flex-1 text-sm" name="forth_url" type="url"
+               value="{{ cohort.forth_workspace_url or '' }}"
+               placeholder="https://forth-bice.vercel.app/…" />
+        <button type="submit" class="btn-secondary btn-sm">Save</button>
+      </form>
+      {% if cohort.forth_workspace_url %}
+        <form method="post" action="/cohort/forth-link">
+          <input type="hidden" name="forth_url" value="" />
+          <button type="submit" class="btn-ghost btn-sm">Remove link</button>
         </form>
       {% endif %}
     </div>

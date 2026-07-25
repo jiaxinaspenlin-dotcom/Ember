@@ -144,7 +144,16 @@ def presence(value: dt.datetime | None) -> str:
     return presence_for(value)
 
 
+def forth_path(url: str) -> str:
+    """A compact, safe label for a validated Forth URL (host + path)."""
+
+    from app.services.forth import display_path
+
+    return display_path(url)
+
+
 templates.env.filters["presence"] = presence
+templates.env.filters["forth_path"] = forth_path
 templates.env.filters["relative_time"] = relative_time
 templates.env.filters["absolute_time"] = absolute_time
 templates.env.filters["iso_time"] = iso_time

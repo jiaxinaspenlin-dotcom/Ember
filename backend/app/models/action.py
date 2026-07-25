@@ -90,6 +90,8 @@ class HelpRequest(Base, TimestampMixin):
     resolved_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
     cancelled_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True))
     resolution_note: Mapped[str | None] = mapped_column(Text)
+    # Optional link to a related Forth item (validated https + exact host).
+    forth_url: Mapped[str | None] = mapped_column(String(500))
 
     requester: Mapped[User] = relationship(foreign_keys=[requester_id], lazy="joined")
     assigned_helper: Mapped[User | None] = relationship(
@@ -136,6 +138,8 @@ class Decision(Base, TimestampMixin):
         ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
     )
     related_project: Mapped[str | None] = mapped_column(String(160))
+    # Optional link to a related Forth item (validated https + exact host).
+    forth_url: Mapped[str | None] = mapped_column(String(500))
     status: Mapped[DecisionStatus] = mapped_column(
         enum_column(DecisionStatus, "decision_status"),
         default=DecisionStatus.ACTIVE,
@@ -187,6 +191,8 @@ class Task(Base, TimestampMixin):
     )
     title: Mapped[str] = mapped_column(String(160), nullable=False)
     description: Mapped[str | None] = mapped_column(Text)
+    # Optional link to a related Forth item (validated https + exact host).
+    forth_url: Mapped[str | None] = mapped_column(String(500))
     creator_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
     )

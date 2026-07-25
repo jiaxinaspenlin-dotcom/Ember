@@ -124,6 +124,25 @@ def revoke_cohort_invite(db: DbDep, ctx: PageCohort) -> Response:
     return RedirectResponse("/admin#invite", status_code=status.HTTP_303_SEE_OTHER)
 
 
+@router.post("/cohort/forth-link", summary="Set or clear the cohort's Forth workspace link")
+def set_cohort_forth_link(
+    db: DbDep, ctx: PageCohort, forth_url: Annotated[str, Form()] = ""
+) -> Response:
+    """Admin-only. An empty value clears the link. Validated server-side."""
+
+    try:
+        cohorts.set_forth_workspace_url(
+            db, actor=ctx.member, cohort=ctx.cohort, url=forth_url or None
+        )
+        db.commit()
+    except EmberError:
+        db.rollback()
+        return RedirectResponse(
+            "/admin?forth_error=1#forth", status_code=status.HTTP_303_SEE_OTHER
+        )
+    return RedirectResponse("/admin#forth", status_code=status.HTTP_303_SEE_OTHER)
+
+
 @router.post("/cohort/members/{user_id}/role", summary="Change a member's cohort role")
 def set_member_role(
     db: DbDep, ctx: PageCohort, user_id: str, role: Annotated[str, Form()]

@@ -28,7 +28,7 @@ from app.core.errors import (
 from app.core.security import generate_token
 from app.models.cohort import Cohort, CohortMembership
 from app.models.user import User
-from app.services import audit
+from app.services import audit, forth
 
 SLUG_PATTERN = re.compile(r"[^a-z0-9-]+")
 
@@ -417,3 +417,22 @@ def revoke_invite_code(db: DbSession, *, actor: CohortMembership, cohort: Cohort
         entity_id=cohort.id,
     )
     db.flush()
+
+
+def set_forth_workspace_url(
+    db: DbSession, *, actor: CohortMembership, cohort: Cohort, url: str | None
+) -> Cohort:
+    """Set, replace, or clear the cohort's Forth workspace link. Admins only.
+
+    ``actor`` must be an admin *of this cohort*, which also prevents cross-cohort
+    edits (a membership only ever belongs to one cohort). The URL is validated
+    server-side to be https on the exact Forth host.
+    """
+
+    if not actor.is_admin:
+        raise PermissionDeniedError("Only a cohort admin can set the Forth workspace link.")
+    if actor.cohort_id != cohort.id:
+        raise PermissionDeniedError("That cohort is not yours to edit.")
+    cohort.forth_workspace_url = forth.normalize_forth_url(url)
+    db.flush()
+    return cohort

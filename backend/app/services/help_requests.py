@@ -36,7 +36,7 @@ from app.models.action import HelpRequest
 from app.models.cohort import Cohort, CohortMembership
 from app.models.message import Message
 from app.models.user import User
-from app.services import audit, notifications
+from app.services import audit, forth, notifications
 
 Actor = CohortMembership
 
@@ -115,6 +115,7 @@ def create_help_request(
     category: HelpCategory = HelpCategory.OTHER,
     urgency: Priority = Priority.NORMAL,
     source_message: Message | None = None,
+    forth_url: str | None = None,
 ) -> HelpRequest:
     """Create a help request, optionally converted from a public channel message."""
 
@@ -144,6 +145,7 @@ def create_help_request(
         category=category,
         urgency=urgency,
         status=HelpRequestStatus.OPEN,
+        forth_url=forth.normalize_forth_url(forth_url),
     )
     db.add(help_request)
     db.flush()
@@ -355,6 +357,8 @@ def update_help_request(
     description: str | None = None,
     category: HelpCategory | None = None,
     urgency: Priority | None = None,
+    forth_url: str | None = None,
+    clear_forth_url: bool = False,
 ) -> HelpRequest:
     if not permissions.can_edit_help_request(help_request, actor):
         raise PermissionDeniedError("You cannot edit this help request.")
@@ -376,6 +380,10 @@ def update_help_request(
         help_request.category = category
     if urgency is not None:
         help_request.urgency = urgency
+    if clear_forth_url:
+        help_request.forth_url = None
+    elif forth_url is not None:
+        help_request.forth_url = forth.normalize_forth_url(forth_url)
     db.flush()
     return help_request
 

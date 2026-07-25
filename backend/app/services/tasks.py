@@ -24,7 +24,7 @@ from app.models.action import Task
 from app.models.cohort import Cohort, CohortMembership
 from app.models.message import Message
 from app.models.user import User
-from app.services import accounts, audit, cohorts, notifications
+from app.services import accounts, audit, cohorts, forth, notifications
 
 Actor = CohortMembership
 
@@ -68,7 +68,6 @@ def _require_cohort_member(
     if cohorts.get_membership(db, cohort_id=cohort_id, user_id=user_id) is None:
         raise NotFoundError("Member not found.", code="USER_NOT_FOUND")
     return user
-    return user
 
 
 def get_task(db: DbSession, cohort: Cohort, task_id: uuid.UUID) -> Task:
@@ -88,6 +87,7 @@ def create_task(
     priority: Priority = Priority.NORMAL,
     due_at: dt.datetime | None = None,
     source_message: Message | None = None,
+    forth_url: str | None = None,
 ) -> Task:
     clean_title = " ".join(title.split())
     if len(clean_title) < 3:
@@ -115,6 +115,7 @@ def create_task(
         status=TaskStatus.TODO,
         priority=priority,
         due_at=due_at,
+        forth_url=forth.normalize_forth_url(forth_url),
     )
     db.add(task)
     db.flush()
@@ -231,6 +232,8 @@ def update_task(
     priority: Priority | None = None,
     due_at: dt.datetime | None = None,
     clear_due_at: bool = False,
+    forth_url: str | None = None,
+    clear_forth_url: bool = False,
 ) -> Task:
     permissions.require_task_management(task, actor)
     if title is not None:
@@ -248,6 +251,10 @@ def update_task(
         task.due_at = None
     elif due_at is not None:
         task.due_at = due_at
+    if clear_forth_url:
+        task.forth_url = None
+    elif forth_url is not None:
+        task.forth_url = forth.normalize_forth_url(forth_url)
     db.flush()
     return task
 

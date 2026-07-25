@@ -28,7 +28,7 @@ from app.models.channel import Channel, ChannelMember, DirectConversation
 from app.models.cohort import CohortMembership
 from app.models.message import Message, Reaction, ReadReceipt
 from app.models.user import User
-from app.services import audit, mentions, notifications
+from app.services import audit, forth, mentions, notifications
 
 Actor = CohortMembership
 
@@ -55,6 +55,9 @@ class MessageView:
     can_pin: bool
     can_convert: bool
     is_own: bool
+    # Distinct Forth links found in the body, for link-preview cards. Empty for
+    # deleted messages (their body is hidden).
+    forth_links: list[str] = field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -614,6 +617,9 @@ def build_view(db: DbSession, message: Message, *, viewer: Actor) -> MessageView
         can_convert=message.deleted_at is None
         and permissions.can_convert_message(message),
         is_own=message.sender_id == viewer.user_id,
+        forth_links=(
+            forth.extract_forth_links(message.body) if message.deleted_at is None else []
+        ),
     )
 
 

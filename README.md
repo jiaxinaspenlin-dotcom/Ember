@@ -24,6 +24,7 @@ real owners** — and lets any public message become one of them in two clicks.
 - [Environment variables](#environment-variables)
 - [GitHub OAuth setup](#github-oauth-setup)
 - [Email authentication setup](#email-authentication-setup)
+- [Forth integration](#forth-integration)
 - [Making someone an administrator](#making-someone-an-administrator)
 - [Rebuilding the stylesheet](#rebuilding-the-stylesheet)
 - [Testing commands](#testing-commands)
@@ -106,6 +107,9 @@ machine and audit trail.
   SQL query
 - **Cohort admin console** — per-cohort roles, channel management, the invite
   link, statistics and an audit trail, all fenced to one cohort
+- **Forth integration (link-only)** — attach a cohort's Forth project-management
+  workspace and link Forth items from tasks, decisions, help requests and
+  messages; validated server-side, no shared accounts or data. See below.
 - **Account recovery** — email verification (opt-in) and password reset, with
   non-disclosing responses
 
@@ -298,6 +302,46 @@ No configuration needed — email/password sign-up works out of the box:
 Email delivery powers password reset and verification. With SMTP unset, mail is
 written to the application log (the "console" backend) so development is honest —
 nothing is faked. See [docs/EMAIL.md](docs/EMAIL.md).
+
+## Forth integration
+
+Ember has a deliberately **lightweight, link-only** integration with
+[Forth](https://forth-bice.vercel.app), the cohort project-management platform.
+
+**What it currently does**
+
+- A cohort **admin** can attach the cohort's Forth workspace URL (Admin console →
+  *Forth workspace*). When set, an **“Open Forth”** button appears in the sidebar
+  for every member, opening Forth in a new tab with `rel="noopener noreferrer"`.
+- **Tasks, decisions, and help requests** can each carry an optional Forth link,
+  shown as a labelled **“View in Forth”** link on the item.
+- **Messages** that contain a Forth link render a minimal **link-preview card**
+  (provider label, the safe path, and an “Open in Forth” link).
+- Every Forth URL is validated **server-side** using parsed URL components (not
+  string matching): it must use **`https`** and have the exact host
+  **`forth-bice.vercel.app`**. Lookalike domains, userinfo tricks, and unsafe
+  schemes (`javascript:`, `data:`, …) are rejected. Only cohort admins may set the
+  workspace URL, and only within their own cohort.
+
+**What it does not do**
+
+- It does **not** call any Forth API, fetch task names/statuses/assignees, or
+  display any Forth data — Forth exposes no confirmed external task API,
+  integration-token flow, or webhook system, so Ember invents none of it.
+- It does **not** share authentication. Ember and Forth **retain entirely
+  separate accounts and databases**, and Ember uses a different Firebase project
+  than Forth (in fact Ember uses no Firebase at all). No Firebase credentials,
+  OAuth tokens, or Forth passwords are ever stored.
+- The link-preview cards never reach out to Forth; they only reformat the URL a
+  member typed.
+
+**What deeper integration would require**
+
+Real synchronization — showing live Forth task status inside Ember, creating
+Forth tasks from Ember, or reacting to Forth changes — would require Forth to
+expose an **authenticated task API** plus an **integration-token flow** and a
+**webhook system**. None of those exist today, so they are intentionally out of
+scope.
 
 ## Making someone an administrator
 

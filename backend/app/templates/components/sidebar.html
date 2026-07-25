@@ -108,6 +108,15 @@
           <li><a href="/admin" class="nav-link {% if active_nav == 'admin' %}nav-link-active{% endif %}"
                  {% if active_nav == 'admin' %}aria-current="page"{% endif %}>Admin</a></li>
         {% endif %}
+        {% if cohort and cohort.forth_workspace_url %}
+          <li>
+            <a href="{{ cohort.forth_workspace_url }}" target="_blank" rel="noopener noreferrer"
+               class="nav-link justify-between">
+              <span>🧭 Open Forth</span>
+              <span class="text-charcoal-400" aria-hidden="true">↗</span>
+            </a>
+          </li>
+        {% endif %}
       </ul>
 
       <div class="mt-7">

@@ -1,4 +1,4 @@
-{% from "components/macros.html" import avatar %}
+{% from "components/macros.html" import avatar, forth_card %}
 {# One message. Every control shown here was authorised in Python. #}
 <article id="message-{{ view.message.id }}"
          class="group relative flex gap-3 px-4 py-2.5 hover:bg-sand-50 sm:px-6">
@@ -28,6 +28,10 @@
         {{ view.message.body | render_body }}
       {% endif %}
     </div>
+
+    {% for forth_url in view.forth_links %}
+      {{ forth_card(forth_url) }}
+    {% endfor %}
 
     <div id="reactions-{{ view.message.id }}">
       {% include "fragments/reaction_bar.html" %}

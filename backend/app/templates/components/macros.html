@@ -59,6 +59,40 @@
   <span class="inline-block h-2 w-2 rounded-full {{ tone }}" aria-hidden="true"></span>
 {% endmacro %}
 
+{# --- Forth integration (link-only; Ember never fetches Forth data) --- #}
+
+{# Small provider chip. #}
+{% macro forth_chip() %}
+  <span class="inline-flex items-center gap-1 rounded bg-ember-50 px-1.5 py-0.5 text-[0.65rem]
+               font-semibold uppercase tracking-wide text-ember-700">🧭 Forth</span>
+{% endmacro %}
+
+{# A labelled external link into Forth. #}
+{% macro forth_link(url, label='View in Forth') %}
+  <a href="{{ url }}" target="_blank" rel="noopener noreferrer"
+     class="inline-flex items-center gap-1.5 text-sm font-medium text-ember-700 hover:text-ember-800">
+    {{ forth_chip() }}<span>{{ label }}</span><span aria-hidden="true">↗</span>
+  </a>
+{% endmacro %}
+
+{# A minimal link-preview card for a Forth URL found in a message. No metadata
+   is ever fetched -- only the provider label, the safe path, and an open link. #}
+{% macro forth_card(url) %}
+  <div class="mt-2 flex items-center gap-3 rounded-lg border border-charcoal-200 bg-sand-50 px-3 py-2">
+    {{ forth_chip() }}
+    <span class="min-w-0 flex-1 truncate text-xs text-charcoal-500" title="{{ url }}">{{ url | forth_path }}</span>
+    <a href="{{ url }}" target="_blank" rel="noopener noreferrer"
+       class="shrink-0 text-xs font-medium text-ember-700 hover:text-ember-800">Open in Forth ↗</a>
+  </div>
+{% endmacro %}
+
+{# The "Open Forth" workspace button (cohort-level). #}
+{% macro forth_button(url) %}
+  <a href="{{ url }}" target="_blank" rel="noopener noreferrer" class="btn-secondary btn-sm">
+    🧭 Open Forth <span aria-hidden="true">↗</span>
+  </a>
+{% endmacro %}
+
 {# Presence dot for a user, driven by their last_active_at via the `presence` filter. #}
 {% macro presence_dot(user, ring=False) %}
   {% set state = user.last_active_at | presence %}

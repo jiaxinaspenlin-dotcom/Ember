@@ -50,6 +50,10 @@ class Cohort(Base, TimestampMixin):
     description: Mapped[str | None] = mapped_column(String(300))
     # Opaque shareable join code; null when no invite link is active.
     invite_code: Mapped[str | None] = mapped_column(String(64))
+    # Optional link to this cohort's Forth (project-management) workspace.
+    # Validated server-side: https and the exact Forth host only. See
+    # app/services/forth.py. This is a link only -- no API/auth is shared.
+    forth_workspace_url: Mapped[str | None] = mapped_column(String(500))
     # Null for system- or CLI-seeded cohorts that no member created.
     created_by_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("users.id", ondelete="RESTRICT"), nullable=True

@@ -25,7 +25,7 @@ from app.db.base import utcnow
 from app.models.action import Decision
 from app.models.cohort import Cohort, CohortMembership
 from app.models.message import Message
-from app.services import audit, notifications
+from app.services import audit, forth, notifications
 
 Actor = CohortMembership
 
@@ -73,6 +73,7 @@ def create_decision(
     context: str | None = None,
     related_project: str | None = None,
     source_message: Message | None = None,
+    forth_url: str | None = None,
 ) -> Decision:
     clean_title = " ".join(title.split())
     if len(clean_title) < 4:
@@ -100,6 +101,7 @@ def create_decision(
         author_id=author.user_id,
         related_project=(related_project or "").strip()[:160] or None,
         status=DecisionStatus.ACTIVE,
+        forth_url=forth.normalize_forth_url(forth_url),
     )
     db.add(decision)
     db.flush()
@@ -124,6 +126,8 @@ def update_decision(
     decision_text: str | None = None,
     context: str | None = None,
     related_project: str | None = None,
+    forth_url: str | None = None,
+    clear_forth_url: bool = False,
 ) -> Decision:
     if not permissions.can_edit_decision(decision, actor):
         raise PermissionDeniedError("You cannot edit this decision.")
@@ -150,6 +154,10 @@ def update_decision(
         decision.context = context.strip() or None
     if related_project is not None:
         decision.related_project = related_project.strip()[:160] or None
+    if clear_forth_url:
+        decision.forth_url = None
+    elif forth_url is not None:
+        decision.forth_url = forth.normalize_forth_url(forth_url)
     db.flush()
     return decision
 

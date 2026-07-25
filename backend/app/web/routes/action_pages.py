@@ -147,6 +147,7 @@ def create_help_request(
     category: Annotated[str, Form()] = HelpCategory.OTHER.value,
     urgency: Annotated[str, Form()] = Priority.NORMAL.value,
     source_message_id: Annotated[str | None, Form()] = None,
+    forth_url: Annotated[str, Form()] = "",
 ) -> Response:
     source = (
         messages.get_visible_message(
@@ -163,6 +164,7 @@ def create_help_request(
         category=HelpCategory(category),
         urgency=Priority(urgency),
         source_message=source,
+        forth_url=forth_url or None,
     )
     db.commit()
     return RedirectResponse(
@@ -287,6 +289,7 @@ def create_decision(
     context: Annotated[str, Form()] = "",
     related_project: Annotated[str, Form()] = "",
     source_message_id: Annotated[str | None, Form()] = None,
+    forth_url: Annotated[str, Form()] = "",
 ) -> Response:
     source = (
         messages.get_visible_message(
@@ -303,6 +306,7 @@ def create_decision(
         context=context,
         related_project=related_project,
         source_message=source,
+        forth_url=forth_url or None,
     )
     db.commit()
     return RedirectResponse(
@@ -441,6 +445,7 @@ def create_task(
     priority: Annotated[str, Form()] = Priority.NORMAL.value,
     due_at: Annotated[str | None, Form()] = None,
     source_message_id: Annotated[str | None, Form()] = None,
+    forth_url: Annotated[str, Form()] = "",
 ) -> Response:
     source = (
         messages.get_visible_message(
@@ -458,6 +463,7 @@ def create_task(
         priority=Priority(priority),
         due_at=_parse_due(due_at),
         source_message=source,
+        forth_url=forth_url or None,
     )
     db.commit()
     return RedirectResponse(f"/tasks/{task.id}", status_code=status.HTTP_303_SEE_OTHER)
