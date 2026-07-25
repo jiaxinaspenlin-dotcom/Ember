@@ -47,3 +47,51 @@ services:
         sync: false
       - key: ADMIN_GITHUB_USERNAMES
         sync: false
+
+  # Second service: an Ohio (US East) deployment, co-located with the Neon
+  # database to cut cross-region latency. Created as a *separate* service
+  # (unique name) so the existing Oregon `ember` service above is never
+  # modified. `region` is only honoured when the service is first created.
+  - type: web
+    name: ember-ohio
+    runtime: docker
+    region: ohio
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api/health
+    # Migrations run once per deploy, before the new instance receives traffic.
+    preDeployCommand: alembic upgrade head
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+      # Render assigns this service its own URL (likely ember-ohio-XXXX.onrender.com).
+      # Correct these three to the real URL after the first deploy.
+      - key: FRONTEND_URL
+        value: https://ember-ohio.onrender.com
+      - key: BACKEND_URL
+        value: https://ember-ohio.onrender.com
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: GITHUB_OAUTH_REDIRECT_URI
+        value: https://ember-ohio.onrender.com/api/auth/github/callback
+      - key: SESSION_COOKIE_NAME
+        value: ember_session
+      - key: SESSION_MAX_AGE_DAYS
+        value: "30"
+      - key: POLLING_INTERVAL_MS
+        value: "4000"
+      # Render terminates TLS in front of the app, so X-Forwarded-For is trustworthy.
+      - key: TRUST_PROXY_HEADERS
+        value: "true"
+      # Server-side only: never exposed to the browser.
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: ADMIN_GITHUB_USERNAMES
+        sync: false
